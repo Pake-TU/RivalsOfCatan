@@ -1,6 +1,6 @@
 # RivalsOfCatan
 This is for a school assignment
-
+```
 src/
 ├── model/                              // Handles game domain and its entities, players hand etc
 │   ├── Card.java
@@ -66,3 +66,4 @@ src/
 |
 └── tests/
     └── To be added
+```
