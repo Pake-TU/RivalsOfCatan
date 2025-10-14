@@ -1,5 +1,4 @@
-// Card.java
-// Quick & dirty, Basic-set only, refactored to reduce duplication
+
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
