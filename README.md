@@ -1,5 +1,9 @@
 # RivalsOfCatan
 This is for a school assignment
+
+# Folder structure
+This structure was discussed with a classmate, Simon Pergel, and we agreed that this structure looks good.
+
 ```
 src/
 ├── model/                              // Handles game domain and its entities, players hand etc
