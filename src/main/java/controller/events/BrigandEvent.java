@@ -8,7 +8,7 @@ import java.util.Set;
 
 /**
  * Handles the Brigand event.
- * Brigands attack players with more than 7 total resources, zeroing out all resources in affected regions.
+ * Brigands attack players with more than 7 total resources, zeroing out Gold and Wool in affected regions.
  */
 public class BrigandEvent implements IEventHandler {
     
@@ -19,8 +19,8 @@ public class BrigandEvent implements IEventHandler {
         for (Player p : players) {
             int total = countAllResources(p, true);
             if (total > 7) {
-                zeroAllResources(p, true);
-                p.sendMessage("Brigands! You lose all resources in affected regions.");
+                zeroGoldAndWool(p, true);
+                p.sendMessage("Brigands! You lose all Gold & Wool in affected regions.");
             }
         }
     }
@@ -53,7 +53,7 @@ public class BrigandEvent implements IEventHandler {
         return total;
     }
     
-    private void zeroAllResources(Player p, boolean excludeStorehouseAdj) {
+    private void zeroGoldAndWool(Player p, boolean excludeStorehouseAdj) {
         Set<String> excluded = excludeStorehouseAdj ? storehouseExcludedKeys(p) : Set.of();
         for (int r = 0; r < p.principality.size(); r++) {
             List<Card> row = p.principality.get(r);
@@ -66,8 +66,8 @@ public class BrigandEvent implements IEventHandler {
                 String key = r + ":" + c;
                 if (excluded.contains(key))
                     continue;
-                // Zero out all region types
-                if ("Region".equalsIgnoreCase(card.type)) {
+                // Zero out only Gold Field (produces Gold) and Pasture (produces Wool)
+                if ("Gold Field".equalsIgnoreCase(card.name) || "Pasture".equalsIgnoreCase(card.name)) {
                     card.regionProduction = 0;
                 }
             }
