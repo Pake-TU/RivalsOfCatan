@@ -8,7 +8,7 @@ import java.util.Set;
 
 /**
  * Handles the Brigand event.
- * Brigands attack players with more than 7 Gold+Wool, zeroing out affected regions.
+ * Brigands attack players with more than 7 total resources, zeroing out all resources in affected regions.
  */
 public class BrigandEvent implements IEventHandler {
     
@@ -17,10 +17,10 @@ public class BrigandEvent implements IEventHandler {
         broadcast(players, "[Event] Brigand Attack");
         
         for (Player p : players) {
-            int total = countGoldAndWool(p, true);
+            int total = countAllResources(p, true);
             if (total > 7) {
-                zeroGoldAndWool(p, true);
-                p.sendMessage("Brigands! You lose all Gold & Wool in affected regions.");
+                zeroAllResources(p, true);
+                p.sendMessage("Brigands! You lose all resources in affected regions.");
             }
         }
     }
@@ -30,7 +30,7 @@ public class BrigandEvent implements IEventHandler {
         return "Brigand";
     }
     
-    private int countGoldAndWool(Player p, boolean excludeStorehouseAdj) {
+    private int countAllResources(Player p, boolean excludeStorehouseAdj) {
         int total = 0;
         Set<String> excluded = excludeStorehouseAdj ? storehouseExcludedKeys(p) : Set.of();
         for (int r = 0; r < p.principality.size(); r++) {
@@ -44,7 +44,8 @@ public class BrigandEvent implements IEventHandler {
                 String key = r + ":" + c;
                 if (excluded.contains(key))
                     continue;
-                if ("Gold Field".equalsIgnoreCase(card.name) || "Pasture".equalsIgnoreCase(card.name)) {
+                // Count resources from all region types
+                if ("Region".equalsIgnoreCase(card.type)) {
                     total += Math.max(0, Math.min(3, card.regionProduction));
                 }
             }
@@ -52,7 +53,7 @@ public class BrigandEvent implements IEventHandler {
         return total;
     }
     
-    private void zeroGoldAndWool(Player p, boolean excludeStorehouseAdj) {
+    private void zeroAllResources(Player p, boolean excludeStorehouseAdj) {
         Set<String> excluded = excludeStorehouseAdj ? storehouseExcludedKeys(p) : Set.of();
         for (int r = 0; r < p.principality.size(); r++) {
             List<Card> row = p.principality.get(r);
@@ -65,7 +66,8 @@ public class BrigandEvent implements IEventHandler {
                 String key = r + ":" + c;
                 if (excluded.contains(key))
                     continue;
-                if ("Gold Field".equalsIgnoreCase(card.name) || "Pasture".equalsIgnoreCase(card.name)) {
+                // Zero out all region types
+                if ("Region".equalsIgnoreCase(card.type)) {
                     card.regionProduction = 0;
                 }
             }
