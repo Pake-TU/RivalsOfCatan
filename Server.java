@@ -523,14 +523,15 @@ public class Server {
                 k = max;
 
             for (int i = 0; i < k; i++) {
-                p.sendMessage("PROMPT: Pick resource #" + (i + 1) + ":");
-                String res = p.receiveMessage();
-                if (p.removeResource("Gold", 1)) {
-                    p.gainResource(res);
-                } else {
+                // First, take the gold
+                if (!p.removeResource("Gold", 1)) {
                     p.sendMessage("No more Gold; stopping.");
                     break;
                 }
+                // Then give the resource
+                p.sendMessage("PROMPT: Pick resource #" + (i + 1) + ":");
+                String res = p.receiveMessage();
+                p.gainResource(res);
             }
         }
     }
