@@ -30,27 +30,7 @@ public class Server {
     private static final int EV_EVENT_A = EventType.EVENT_A;
     private static final int EV_EVENT_B = EventType.EVENT_B;
 
-    // ---------- Bootstrap ----------
-    public static void main(String[] args) {
-        Server s = new Server();
-        try {
-            if ((args.length == 0 || (args.length > 0 && args[0].equalsIgnoreCase("bot")))) {
-                Card.loadBasicCards("cards.json");
-                s.start(args.length == 0 ? false : true); // with bot
-                s.run();
-                return;
-            } else if (args.length > 0 && args[0].equalsIgnoreCase("online")) {
-                s.runClient();
-                return; // run client mode
-            } else {
-                System.out.println("Usage: java Server [optional: bot|online]");
-                return;
-            }
-        } catch (Exception e) {
-            System.err.println("Failed to start: " + e.getMessage());
-            return;
-        }
-    }
+
 
     public void start(boolean withBot) throws Exception {
         // 1) local console player
@@ -82,56 +62,7 @@ public class Server {
         }
     }
 
-    public void runClient() throws Exception {
-        Socket socket = new Socket("127.0.0.1", 2048);
 
-        // IMPORTANT: create ObjectOutputStream first, then flush, then
-        // ObjectInputStream
-        ObjectOutputStream outToServer = new ObjectOutputStream(socket.getOutputStream());
-        outToServer.flush(); // send stream header immediately
-        ObjectInputStream inFromServer = new ObjectInputStream(socket.getInputStream());
-
-        Scanner console = new Scanner(System.in);
-        try {
-            while (true) {
-                Object obj = inFromServer.readObject();
-                if (!(obj instanceof String)) {
-                    // ignore unexpected payloads
-                    continue;
-                }
-                String msg = (String) obj;
-
-                // Always print what the server sent
-                System.out.println(msg);
-
-                // If it's a prompt, read one line from console and send it back
-                if (msg.startsWith("PROMPT:")) {
-                    System.out.print("> ");
-                    System.out.flush();
-                    String answer = console.nextLine();
-                    outToServer.writeObject(answer);
-                    outToServer.flush(); // push it now
-                    outToServer.reset(); // avoid OOS caching of repeated String instances
-                }
-
-                // Allow server to end the session with a keyword
-                if (msg.toLowerCase().contains("winner") || msg.equalsIgnoreCase("CLOSE"))
-                    break;
-            }
-        } finally {
-            try {
-                console.close();
-                inFromServer.close();
-                outToServer.close();
-                socket.close();
-            } catch (Exception ignored) {
-            }
-        }
-    }
-
-    // ---------- Initial setup (your original layout preserved) ----------
-
-    // ---------- Main loop ----------
     public void run() {
         int current = Math.random() < 0.5 ? 0 : 1; // random start
         // print the players principality and hand
