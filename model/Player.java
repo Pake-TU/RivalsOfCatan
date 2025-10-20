@@ -57,6 +57,9 @@ public class Player {
     public String receiveMessage() {
         if (isBot) {
             // Bot auto-response: simple default choices
+            // Note: This is a simplistic implementation that always returns "1".
+            // For a more sophisticated bot, implement context-aware responses
+            // based on game state and available options.
             return "1"; // Default choice for most prompts
         }
         System.out.print("> ");

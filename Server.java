@@ -177,7 +177,7 @@ public class Server {
             replenishManager.replenish(active);
 
             // -------- Part 4: Exchange (simplified) --------
-            exchangeManager.exchangePhase(active);
+            exchangeManager.exchangePhase(active, this::broadcast);
 
             // -------- Part 5: Scoring & Win Check --------
             if (checkWinEndOfTurn(active, other))
@@ -1050,12 +1050,6 @@ public class Server {
     }
 
     // ---------- Replenish ----------
-
-    private int readInt(String s, int def) {
-        return CostParser.parseInt(s, def);
-    }
-
-    // ---------- Exchange (with Parish Hall discount) ----------
 
     // ---------- Misc ----------
     private void broadcast(String s) {

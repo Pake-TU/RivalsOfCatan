@@ -12,11 +12,12 @@ public class ExchangeManager {
     /**
      * Execute the exchange phase for a player.
      * @param p The player
+     * @param broadcast Function to broadcast messages to all players
      */
-    public void exchangePhase(Player p) {
+    public void exchangePhase(Player p, java.util.function.Consumer<String> broadcast) {
         int limit = 3 + p.progressPoints;
         if (p.handSize() < limit) {
-            p.sendMessage("Exchange: hand below limit; skipping.");
+            broadcast.accept("Exchange: hand below limit; skipping.");
             return;
         }
 
