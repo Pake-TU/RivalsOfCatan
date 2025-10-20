@@ -5,6 +5,8 @@ import com.google.gson.JsonParser;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.*;
 
 public class Card implements Comparable<Card> {
@@ -149,8 +151,15 @@ public class Card implements Comparable<Card> {
     public static void loadBasicCards(String jsonPath) throws IOException {
         Vector<Card> allBasic = new Vector<>();
 
-        try (FileReader fr = new FileReader(jsonPath)) {
-            JsonElement root = JsonParser.parseReader(fr);
+        // Try to load from classpath first (for Maven), then fall back to file system
+        InputStream is = Card.class.getClassLoader().getResourceAsStream(jsonPath);
+        if (is == null) {
+            // Fall back to file system (for backward compatibility)
+            is = new java.io.FileInputStream(jsonPath);
+        }
+
+        try (InputStreamReader reader = new InputStreamReader(is)) {
+            JsonElement root = JsonParser.parseReader(reader);
             if (!root.isJsonArray())
                 throw new IOException("cards.json: expected top-level array");
             JsonArray arr = root.getAsJsonArray();

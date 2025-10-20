@@ -13,6 +13,9 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
+# Old dependency management (replaced by Maven)
+gson.jar
+
 # IDE files
 .idea/
 *.iml
