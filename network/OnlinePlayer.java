@@ -11,6 +11,14 @@ import java.net.Socket;
 /**
  * Minimal online-capable player. The server calls setConnection(...) after
  * accepting a socket. If no connection is set, it falls back to console I/O.
+ * 
+ * SECURITY NOTE: This class uses Java serialization (ObjectInputStream/ObjectOutputStream)
+ * which has known security vulnerabilities. This implementation includes basic validation
+ * to only accept String objects, but for production use, consider:
+ * - Using a safer serialization format (JSON, Protocol Buffers, etc.)
+ * - Implementing proper authentication and authorization
+ * - Using encrypted connections (TLS/SSL)
+ * - Restricting which classes can be deserialized
  */
 public class OnlinePlayer extends Player {
 
@@ -76,7 +84,12 @@ public class OnlinePlayer extends Player {
         if (in != null && out != null) {
             try {
                 Object o = in.readObject();
-                return (o == null) ? null : o.toString();
+                // Security: Only accept String objects to prevent deserialization attacks
+                if (o != null && !(o instanceof String)) {
+                    System.err.println("[OnlinePlayer] Security: Rejected non-String object: " + o.getClass().getName());
+                    return null;
+                }
+                return (o == null) ? null : (String) o;
             } catch (Exception e) {
                 System.err.println("[OnlinePlayer] receive error: " + e.getMessage());
                 return null;
