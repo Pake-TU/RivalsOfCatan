@@ -49,10 +49,16 @@ public class Player {
 
     // ------------- I/O (console) -------------
     public void sendMessage(Object m) {
-        System.out.println(m);
+        if (!isBot) {
+            System.out.println(m);
+        }
     }
 
     public String receiveMessage() {
+        if (isBot) {
+            // Bot auto-response: simple default choices
+            return "1"; // Default choice for most prompts
+        }
         System.out.print("> ");
         return in.nextLine();
     }

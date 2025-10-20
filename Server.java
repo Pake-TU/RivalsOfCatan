@@ -1,6 +1,7 @@
 import model.*;
 import network.OnlinePlayer;
 import util.CostParser;
+import controller.*;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -13,6 +14,12 @@ public class Server {
     public final List<Player> players = new ArrayList<>();
     public ServerSocket serverSocket;
     private final Random rng = new Random();
+    
+    // Managers for different game phases
+    private final InitializationManager initManager = new InitializationManager();
+    private final ProductionManager productionManager = new ProductionManager();
+    private final ReplenishManager replenishManager = new ReplenishManager();
+    private final ExchangeManager exchangeManager = new ExchangeManager();
 
     // Event die faces
     private static final int EV_BRIGAND = EventType.BRIGAND;
@@ -67,10 +74,10 @@ public class Server {
             System.out.println("Connected Online Player ");
             op.sendMessage("WELCOME Online Player ");
         }
-        initPrincipality();
+        initManager.initPrincipality(players);
         // Initial replenish (3 cards each)
         for (int i = 0; i < players.size(); i++) {
-            replenish(players.get(i));
+            replenishManager.replenish(players.get(i));
         }
     }
 
@@ -122,88 +129,6 @@ public class Server {
     }
 
     // ---------- Initial setup (your original layout preserved) ----------
-    private void initPrincipality() {
-        // Center row index = 2 in a 5x5
-        int center = 2;
-
-        // Two players’ starting diceRoll sets (Forest, Gold Field, Field, Hill,
-        // Pasture, Mountain)
-        int[][] regionDice = { { 2, 1, 6, 3, 4, 5 }, { 3, 4, 5, 2, 1, 6 } };
-
-        for (int i = 0; i < players.size(); i++) {
-            Player p = players.get(i);
-            // center basics
-            p.placeCard(center, 1, Card.popCardByName(Card.settlements, "Settlement"));
-            p.placeCard(center, 2, Card.popCardByName(Card.roads, "Road"));
-            p.placeCard(center, 3, Card.popCardByName(Card.settlements, "Settlement"));
-
-            // Regions in rows 1 and 3 (above/below)
-            Card forest = Card.popCardByName(Card.regions, "Forest");
-            forest.diceRoll = regionDice[i][0];
-            forest.regionProduction = 1;
-            Card gold = Card.popCardByName(Card.regions, "Gold Field");
-            gold.diceRoll = regionDice[i][1];
-            gold.regionProduction = 0;
-            Card field = Card.popCardByName(Card.regions, "Field");
-            field.diceRoll = regionDice[i][2];
-            field.regionProduction = 1;
-            Card hill = Card.popCardByName(Card.regions, "Hill");
-            hill.diceRoll = regionDice[i][3];
-            hill.regionProduction = 1;
-            Card past = Card.popCardByName(Card.regions, "Pasture");
-            past.diceRoll = regionDice[i][4];
-            past.regionProduction = 1;
-            Card mount = Card.popCardByName(Card.regions, "Mountain");
-            mount.diceRoll = regionDice[i][5];
-            mount.regionProduction = 1;
-
-            p.placeCard(center - 1, 0, forest);
-            p.placeCard(center - 1, 2, gold);
-            p.placeCard(center - 1, 4, field);
-            p.placeCard(center + 1, 0, hill);
-            p.placeCard(center + 1, 2, past);
-            p.placeCard(center + 1, 4, mount);
-
-        }
-
-        // Put remaining “fixed dice” regions back in region stack (as in your previous
-        // code)
-        addBackExtraFixedRegions();
-        Collections.shuffle(Card.regions);
-    }
-
-    private void addBackExtraFixedRegions() {
-        // There are two of each of these cards, each with a fixed diceRoll:
-        setTwoUndiced("Field", 3, 1);
-        setTwoUndiced("Mountain", 4, 2);
-        setTwoUndiced("Hill", 5, 1);
-        setTwoUndiced("Forest", 6, 4);
-        setTwoUndiced("Pasture", 6, 5);
-        setTwoUndiced("Gold Field", 3, 2);
-
-        // After assigning dice to remaining cards, shuffle the deck
-        java.util.Collections.shuffle(Card.regions);
-    }
-
-    private void setTwoUndiced(String name, int d1, int d2) {
-        Card c1 = findUndicedByName(Card.regions, name);
-        if (c1 != null)
-            c1.diceRoll = d1;
-        Card c2 = findUndicedByName(Card.regions, name);
-        if (c2 != null)
-            c2.diceRoll = d2;
-    }
-
-    // Returns a card with diceRoll == 0, matching name, but DOES NOT remove it.
-    private Card findUndicedByName(java.util.Vector<Card> deck, String name) {
-        for (int i = 0; i < deck.size(); i++) {
-            Card c = deck.get(i);
-            if (c != null && name.equalsIgnoreCase(c.name) && c.diceRoll == 0) {
-                return c; // leave in place; we only set diceRoll
-            }
-        }
-        return null;
-    }
 
     // ---------- Main loop ----------
     public void run() {
@@ -228,9 +153,9 @@ public class Server {
 
             if (eventFace == EV_BRIGAND) { // Brigand first, then production
                 resolveEvent(eventFace, active, other);
-                applyProduction(prodFace); // regions + boosters (cap 3)
+                productionManager.applyProduction(prodFace, players, this::opponentOf);
             } else { // production first, then event
-                applyProduction(prodFace); // regions + boosters (cap 3)
+                productionManager.applyProduction(prodFace, players, this::opponentOf);
                 resolveEvent(eventFace, active, other);
             }
 
@@ -249,10 +174,10 @@ public class Server {
             actionPhase(active, other);
 
             // -------- Part 3: Replenish Hand --------
-            replenish(active);
+            replenishManager.replenish(active);
 
             // -------- Part 4: Exchange (simplified) --------
-            exchangePhase(active);
+            exchangeManager.exchangePhase(active);
 
             // -------- Part 5: Scoring & Win Check --------
             if (checkWinEndOfTurn(active, other))
@@ -298,73 +223,6 @@ public class Server {
     }
 
     // ---------- Production ----------
-    private void applyProduction(int face) {
-        for (Player p : players) {
-            // Marketplace extra check: if opponent has more regions matching face, p gets
-            // +1 of matching type (your rule text)
-            boolean hasMarketplace = p.flags.contains("MARKETPLACE");
-            int pMatches = countFaceRegions(p, face);
-            int oppMatches = countFaceRegions(opponentOf(p), face);
-
-            for (int r = 0; r < p.principality.size(); r++) {
-                List<Card> row = p.principality.get(r);
-                for (int c = 0; c < row.size(); c++) {
-                    Card card = row.get(c);
-                    if (card == null || !"Region".equalsIgnoreCase(card.type))
-                        continue;
-                    if (card.diceRoll != face)
-                        continue;
-
-                    // Base increase = 1
-                    int inc = 1;
-                    // Booster buildings adjacent (same row, at c-1 or c+1) add +1 (the “double”
-                    // effect)
-                    if (hasAdjacentBoosterForRegion(p, r, c))
-                        inc += 1;
-
-                    card.regionProduction = Math.min(3, card.regionProduction + inc);
-                }
-            }
-
-            // Marketplace: if opponent has strictly more face-regions than p, p may gain +1
-            // of one of those face resources
-            if (hasMarketplace && oppMatches > pMatches) {
-                p.sendMessage("PROMPT: Marketplace - choose one resource produced on face " + face
-                        + " to gain (e.g., Grain/Gold/Lumber):");
-                String res = p.receiveMessage();
-                p.gainResource(res);
-            }
-
-            // Toll Bridge: on Plentiful Harvest handled in event, not here
-        }
-    }
-
-    private boolean hasAdjacentBoosterForRegion(Player p, int rr, int cc) {
-        Card region = p.getCard(rr, cc);
-        if (region == null)
-            return false;
-        // Check building at (rr, cc-1) and (rr, cc+1)
-        Card left = p.getCard(rr, cc - 1);
-        Card right = p.getCard(rr, cc + 1);
-        return isBoosting(left, region) || isBoosting(right, region);
-    }
-
-    private boolean isBoosting(Card maybeBuilding, Card region) {
-        if (maybeBuilding == null)
-            return false;
-        if (!"Building".equalsIgnoreCase(maybeBuilding.type))
-            return false;
-        return Card.buildingBoostsRegion(maybeBuilding.name, region.name);
-    }
-
-    private int countFaceRegions(Player p, int face) {
-        int n = 0;
-        for (List<Card> row : p.principality)
-            for (Card c : row)
-                if (c != null && "Region".equalsIgnoreCase(c.type) && c.diceRoll == face)
-                    n++;
-        return n;
-    }
 
     // ---------- Events ----------
     private void resolveEvent(int face, Player active, Player other) {
@@ -1192,119 +1050,12 @@ public class Server {
     }
 
     // ---------- Replenish ----------
-    private void replenish(Player p) {
-        if (p.flags != null && p.flags.remove("NO_REPLENISH_ONCE")) {
-            p.sendMessage("You cannot replenish your hand this turn (Fraternal Feuds).");
-            return;
-        } else {
-            int handTarget = 3 + p.progressPoints;
-            while (p.handSize() < handTarget) {
-                p.sendMessage("PROMPT: Replenish - choose draw stack [1-4]:");
-                int which = readInt(p.receiveMessage(), 1);
-                Vector<Card> stack = stackBy(which);
-                if (stack.isEmpty()) {
-                    // advance circularly until any non-empty
-                    int tries = 0;
-                    do {
-                        which = 1 + (which % 4);
-                        stack = stackBy(which);
-                        tries++;
-                    } while (stack.isEmpty() && tries <= 4);
-                    if (stack.isEmpty()) {
-                        p.sendMessage("All stacks empty.");
-                        break;
-                    }
-                }
-                p.addToHand(stack.remove(0));
-            }
-        }
-    }
-
-    private Vector<Card> stackBy(int n) {
-        switch (n) {
-            case 1:
-                return Card.drawStack1;
-            case 2:
-                return Card.drawStack2;
-            case 3:
-                return Card.drawStack3;
-            case 4:
-                return Card.drawStack4;
-        }
-        return Card.drawStack1;
-    }
 
     private int readInt(String s, int def) {
         return CostParser.parseInt(s, def);
     }
 
     // ---------- Exchange (with Parish Hall discount) ----------
-    private void exchangePhase(Player p) {
-        int limit = 3 + p.progressPoints;
-        if (p.handSize() < limit) {
-            broadcast("Exchange: hand below limit; skipping.");
-            return;
-        }
-
-        p.sendMessage("PROMPT: Exchange a card? (Y/N)");
-        String ans = p.receiveMessage();
-        if (ans == null || !ans.trim().toUpperCase().startsWith("Y"))
-            return;
-
-        p.sendMessage("PROMPT: Enter card name to put under a stack:");
-        String nm = p.receiveMessage();
-        Card chosen = p.removeFromHandByName(nm);
-        if (chosen == null) {
-            p.sendMessage("Not in hand.");
-            return;
-        }
-
-        p.sendMessage("PROMPT: Choose stack [1-4] to put it under:");
-        int st = readInt(p.receiveMessage(), 1);
-        Vector<Card> stack = stackBy(st);
-        stack.add(chosen);
-
-        boolean hasParish = p.flags.contains("PARISH");
-        int searchCost = hasParish ? 1 : 2;
-
-        p.sendMessage("PROMPT: Choose Random draw (R) or Search (S, costs " + searchCost + " any)?");
-        String mode = p.receiveMessage();
-        if (mode != null && mode.trim().toUpperCase().startsWith("S")) {
-            // Pay 1 (with Parish) or 2 (normal) resources of the player's choice
-            if (p.totalAllResources() < searchCost) {
-                p.sendMessage("Not enough resources to search.");
-                return;
-            }
-            for (int i = 0; i < searchCost; i++) {
-                p.sendMessage("PROMPT: Discard resource #" + (i + 1) + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                p.removeResource(p.receiveMessage(), 1);
-            }
-
-            if (stack.isEmpty()) {
-                p.sendMessage("That stack is empty.");
-                return;
-            }
-            p.sendMessage("Stack contains (top..bottom):");
-            for (Card c : stack)
-                p.sendMessage(" - " + c.name);
-            p.sendMessage("PROMPT: Type exact name to take:");
-            String take = p.receiveMessage();
-            for (int i = 0; i < stack.size(); i++) {
-                if (stack.get(i).name.equalsIgnoreCase(take)) {
-                    p.addToHand(stack.remove(i));
-                    return;
-                }
-            }
-            p.sendMessage("Not found; no card taken.");
-        } else {
-            // Random draw (top of chosen stack)
-            if (stack.isEmpty()) {
-                p.sendMessage("That stack is empty.");
-                return;
-            }
-            p.addToHand(stack.remove(0));
-        }
-    }
 
     // ---------- Misc ----------
     private void broadcast(String s) {
