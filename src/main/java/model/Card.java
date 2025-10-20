@@ -151,8 +151,15 @@ public class Card implements Comparable<Card> {
     public static void loadBasicCards(String jsonPath) throws IOException {
         Vector<Card> allBasic = new Vector<>();
 
-        try (FileReader fr = new FileReader(jsonPath)) {
-            JsonElement root = JsonParser.parseReader(fr);
+        // Try to load from classpath first (for Maven), then from filesystem
+        java.io.InputStream is = Card.class.getClassLoader().getResourceAsStream(jsonPath);
+        if (is == null) {
+            // Fall back to filesystem (for backward compatibility)
+            is = new java.io.FileInputStream(jsonPath);
+        }
+        
+        try (java.io.InputStreamReader isr = new java.io.InputStreamReader(is)) {
+            JsonElement root = JsonParser.parseReader(isr);
             if (!root.isJsonArray())
                 throw new IOException("cards.json: expected top-level array");
             JsonArray arr = root.getAsJsonArray();
