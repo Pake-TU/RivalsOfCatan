@@ -1,3 +1,5 @@
+package model;
+
 import java.util.*;
 
 public class Player {
@@ -47,10 +49,19 @@ public class Player {
 
     // ------------- I/O (console) -------------
     public void sendMessage(Object m) {
-        System.out.println(m);
+        if (!isBot) {
+            System.out.println(m);
+        }
     }
 
     public String receiveMessage() {
+        if (isBot) {
+            // Bot auto-response: simple default choices
+            // Note: This is a simplistic implementation that always returns "1".
+            // For a more sophisticated bot, implement context-aware responses
+            // based on game state and available options.
+            return "1"; // Default choice for most prompts
+        }
         System.out.print("> ");
         return in.nextLine();
     }
@@ -375,27 +386,7 @@ public class Player {
 
     // Map a resource name to its Region card name
     private String resourceToRegion(String type) {
-        if (type == null)
-            return null;
-        String t = type.trim().toLowerCase();
-        switch (t) {
-            case "brick":
-                return "Hill";
-            case "grain":
-                return "Field";
-            case "lumber":
-                return "Forest";
-            case "wool":
-                return "Pasture";
-            case "ore":
-                return "Mountain";
-            case "gold":
-                return "Gold Field";
-            case "any":
-                return "Any";
-            default:
-                return null;
-        }
+        return ResourceType.resourceToRegion(type);
     }
 
     // Collect all Region cards of a given region-name (e.g., "Forest")
