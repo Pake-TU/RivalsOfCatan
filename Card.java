@@ -503,15 +503,13 @@ public class Card implements Comparable<Card> {
                 // Just let player pick 2 to discard, then 2 to gain
                 // (opting out by discarding and gaining same resource is allowed)
                 for (int i = 0; i < 2; i++) {
-                    active.sendMessage(
+                    String g = active.validateResourceInput(
                             "PROMPT: Type Discard resource #" + (i + 1) + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                    String g = active.receiveMessage();
                     active.removeResource(g, 1);
                 }
                 for (int i = 0; i < 2; i++) {
-                    active.sendMessage(
+                    String g = active.validateResourceInput(
                             "PROMPT: Type Gain resource #" + (i + 1) + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                    String g = active.receiveMessage();
                     active.gainResource(g);
                 }
                 return true;
@@ -538,8 +536,7 @@ public class Card implements Comparable<Card> {
                 }
                 active.sendMessage("Goldsmith: choose two resources to gain:");
                 for (int i = 1; i <= 2; i++) {
-                    active.sendMessage("Pick resource #" + i + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                    String g = active.receiveMessage();
+                    String g = active.validateResourceInput("Pick resource #" + i + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
                     active.gainResource(g);
                 }
                 return true;

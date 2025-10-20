@@ -451,17 +451,32 @@ public class Player {
         return sum;
     }
 
+    // Validate resource input - keeps asking until valid input is provided
+    public String validateResourceInput(String prompt) {
+        while (true) {
+            sendMessage(prompt);
+            String input = receiveMessage();
+            if (input != null) {
+                String regionName = resourceToRegion(input);
+                if (regionName != null && !"Any".equals(regionName)) {
+                    return input;
+                }
+            }
+            sendMessage("Unknown resource '" + input + "'. Please enter a valid resource type.");
+        }
+    }
+
     // Gain 1 resource of a type: add to the matching region with the LOWEST stock
     // (<3)
     // If "Any", ask the player which resource to take.
     public void gainResource(String type) {
         String t = type;
         if (t == null || t.equalsIgnoreCase("Any")) {
-            sendMessage("PROMPT: Choose resource to gain (Brick/Grain/Lumber/Wool/Ore/Gold):");
-            t = receiveMessage();
+            t = validateResourceInput("PROMPT: Choose resource to gain [Brick|Grain|Lumber|Wool|Ore|Gold]:");
         }
         String regionName = resourceToRegion(t);
         if (regionName == null || "Any".equals(regionName)) {
+            // This should not happen now due to validation, but keep as safeguard
             sendMessage("Unknown resource '" + t + "'. Ignored.");
             return;
         }

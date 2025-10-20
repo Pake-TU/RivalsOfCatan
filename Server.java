@@ -334,9 +334,8 @@ public class Server {
             // Marketplace: if opponent has strictly more face-regions than p, p may gain +1
             // of one of those face resources
             if (hasMarketplace && oppMatches > pMatches) {
-                p.sendMessage("PROMPT: Marketplace - choose one resource produced on face " + face
-                        + " to gain (e.g., Grain/Gold/Lumber):");
-                String res = p.receiveMessage();
+                String res = p.validateResourceInput("PROMPT: Marketplace - choose one resource produced on face " + face
+                        + " to gain [Brick|Grain|Lumber|Wool|Ore|Gold]:");
                 p.gainResource(res);
             }
 
@@ -394,9 +393,9 @@ public class Server {
                 // bank
                 for (Player p : players) {
                     if (p.commercePoints >= 3) {
-                        p.sendMessage(
+                        String resource = p.validateResourceInput(
                                 "PROMPT: Trade Advantage - gain 1 resource of your choice [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                        p.gainResource(p.receiveMessage());
+                        p.gainResource(resource);
                     }
                 }
                 break;
@@ -407,23 +406,23 @@ public class Server {
                 int bSP = players.get(1).skillPoints;
                 if (aSP == bSP) {
                     for (Player p : players) {
-                        p.sendMessage(
+                        String resource = p.validateResourceInput(
                                 "PROMPT: Celebration - gain 1 resource of your choice [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                        p.gainResource(p.receiveMessage());
+                        p.gainResource(resource);
                     }
                 } else {
                     Player winner = aSP > bSP ? players.get(0) : players.get(1);
-                    winner.sendMessage(
+                    String resource = winner.validateResourceInput(
                             "PROMPT: Celebration (you have most skill) - gain 1 resource of your choice [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                    winner.gainResource(winner.receiveMessage());
+                    winner.gainResource(resource);
                 }
                 break;
 
             case EV_PLENTY:
                 broadcast("[Event] Plentiful Harvest: each player gains 1 of choice.");
                 for (Player p : players) {
-                    p.sendMessage("PROMPT: Plentiful Harvest - choose a resource [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                    p.gainResource(p.receiveMessage());
+                    String resource = p.validateResourceInput("PROMPT: Plentiful Harvest - choose a resource [Brick|Grain|Lumber|Wool|Ore|Gold]:");
+                    p.gainResource(resource);
                     // Toll Bridge: +2 Gold if you can store it (any gold field with <3)
                     if (p.flags.contains("TOLLB")) {
                         int add = grantGoldIfSpace(p, 2);
@@ -628,20 +627,20 @@ public class Server {
         }
         if (c0 > c1) {
             Player p = players.get(0);
-            p.sendMessage(
+            String resource = p.validateResourceInput(
                     "PROMPT: Trade Ships Race - you have the most trade ships. Choose 1 resource [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-            p.gainResource(p.receiveMessage());
+            p.gainResource(resource);
         } else if (c1 > c0) {
             Player p = players.get(1);
-            p.sendMessage(
+            String resource = p.validateResourceInput(
                     "PROMPT: Trade Ships Race - you have the most trade ships. Choose 1 resource [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-            p.gainResource(p.receiveMessage());
+            p.gainResource(resource);
         } else { // tie
             if (c0 >= 1 && c1 >= 1) {
                 for (Player p : players) {
-                    p.sendMessage(
+                    String resource = p.validateResourceInput(
                             "PROMPT: Trade Ships Race (tie) - choose 1 resource [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                    p.gainResource(p.receiveMessage());
+                    p.gainResource(resource);
                 }
             } else {
                 broadcast("Trade Ships Race: tie without both having ≥1 ship; no one receives a resource.");
@@ -670,8 +669,7 @@ public class Server {
                 k = max;
 
             for (int i = 0; i < k; i++) {
-                p.sendMessage("PROMPT: Pick resource #" + (i + 1) + ":");
-                String res = p.receiveMessage();
+                String res = p.validateResourceInput("PROMPT: Pick resource #" + (i + 1) + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
                 if (p.removeResource("Gold", 1)) {
                     p.gainResource(res);
                 } else {
@@ -713,8 +711,7 @@ public class Server {
                 continue;
             }
             for (int i = 0; i < times; i++) {
-                p.sendMessage("PROMPT: Invention - gain resource #" + (i + 1) + " of your choice:");
-                String res = p.receiveMessage();
+                String res = p.validateResourceInput("PROMPT: Invention - gain resource #" + (i + 1) + " of your choice [Brick|Grain|Lumber|Wool|Ore|Gold]:");
                 p.gainResource(res);
             }
         }
@@ -1324,8 +1321,8 @@ public class Server {
                 return;
             }
             for (int i = 0; i < searchCost; i++) {
-                p.sendMessage("PROMPT: Discard resource #" + (i + 1) + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                p.removeResource(p.receiveMessage(), 1);
+                String resource = p.validateResourceInput("PROMPT: Discard resource #" + (i + 1) + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
+                p.removeResource(resource, 1);
             }
 
             if (stack.isEmpty()) {
