@@ -428,17 +428,8 @@ public class Card implements Comparable<Card> {
                     return false;
                 }
                 
-                // Also check that no other Settlement or City is directly adjacent
-                Card L1 = active.getCard(row, col - 1);
-                Card R1 = active.getCard(row, col + 1);
-                boolean hasAdjacentSettlementOrCity = (L1 != null && (nmEquals(L1.name, "Settlement") || nmEquals(L1.name, "City")))
-                        || (R1 != null && (nmEquals(R1.name, "Settlement") || nmEquals(R1.name, "City")));
-                
-                if (hasAdjacentSettlementOrCity) {
-                    active.sendMessage("City cannot be placed next to another Settlement or City. A Road must be between them.");
-                    return false;
-                }
-                
+                // No need to check adjacency - the settlement already satisfied those rules
+                // when it was placed, and we're just upgrading it
                 active.placeCard(row, col, this);
                 active.victoryPoints += 1; // city is 2VP total; settlement vp ignored here, we just add +1
                 return true;
