@@ -232,7 +232,8 @@ public class Card implements Comparable<Card> {
     private static boolean isCenterSlot(int row) {
         // By convention: inner/outer rows hold expansions & regions; middle row is
         // center (roads/settlements/cities)
-        return row % 2 == 0; // 0,2,4,... => center columns; we use row 2 initially as center
+        // Only row 2 is allowed for center cards
+        return row == 2;
     }
 
     // Determine if region name matches what a booster affects
@@ -364,8 +365,17 @@ public class Card implements Comparable<Card> {
             }
 
             if (nmEquals(nm, "Road")) {
-                // Just allow anywhere center that touches a center card or extends line
-                // (Keep it permissive/ugly)
+                // Roads require a settlement or city on both the left and right
+                Card L1 = active.getCard(row, col - 1);
+                Card R1 = active.getCard(row, col + 1);
+                boolean hasLeftSettlementOrCity = (L1 != null && (nmEquals(L1.name, "Settlement") || nmEquals(L1.name, "City")));
+                boolean hasRightSettlementOrCity = (R1 != null && (nmEquals(R1.name, "Settlement") || nmEquals(R1.name, "City")));
+                
+                if (!hasLeftSettlementOrCity || !hasRightSettlementOrCity) {
+                    active.sendMessage("Road must be placed between a Settlement/City on the left and a Settlement/City on the right.");
+                    return false;
+                }
+                
                 active.placeCard(row, col, this);
                 active.sendMessage("Built a Road.");
                 // Expand board if we built at an edge
@@ -374,15 +384,28 @@ public class Card implements Comparable<Card> {
             }
 
             if (nmEquals(nm, "Settlement")) {
-                // Simplified: must be next to a Road (left or right) and empty here
+                // Settlement must be next to a Road (left or right)
+                // AND there cannot be another Settlement or City directly adjacent (left or right)
                 Card L1 = active.getCard(row, col - 1);
                 Card R1 = active.getCard(row, col + 1);
+                
+                // Check if there's a settlement or city directly adjacent
+                boolean hasAdjacentSettlementOrCity = (L1 != null && (nmEquals(L1.name, "Settlement") || nmEquals(L1.name, "City")))
+                        || (R1 != null && (nmEquals(R1.name, "Settlement") || nmEquals(R1.name, "City")));
+                
+                if (hasAdjacentSettlementOrCity) {
+                    active.sendMessage("Settlement cannot be placed directly next to another Settlement or City. A Road must be between them.");
+                    return false;
+                }
+                
+                // Check if there's a road adjacent
                 boolean hasRoad = (L1 != null && nmEquals(L1.name, "Road"))
                         || (R1 != null && nmEquals(R1.name, "Road"));
                 if (!hasRoad) {
                     active.sendMessage("Settlement must be placed next to a Road.");
                     return false;
                 }
+                
                 active.placeCard(row, col, this);
                 active.victoryPoints += 1;
 
@@ -399,12 +422,23 @@ public class Card implements Comparable<Card> {
 
             if (nmEquals(nm, "City")) {
                 // Must be on top of an existing settlement in the same slot (same row,col)
-                // For ugly simplicity: allow upgrading if a Settlement exists exactly here
                 Card under = active.getCard(row, col);
                 if (under == null || !nmEquals(under.name, "Settlement")) {
                     active.sendMessage("City must be placed on top of an existing Settlement (same slot).");
                     return false;
                 }
+                
+                // Also check that no other Settlement or City is directly adjacent
+                Card L1 = active.getCard(row, col - 1);
+                Card R1 = active.getCard(row, col + 1);
+                boolean hasAdjacentSettlementOrCity = (L1 != null && (nmEquals(L1.name, "Settlement") || nmEquals(L1.name, "City")))
+                        || (R1 != null && (nmEquals(R1.name, "Settlement") || nmEquals(R1.name, "City")));
+                
+                if (hasAdjacentSettlementOrCity) {
+                    active.sendMessage("City cannot be placed next to another Settlement or City. A Road must be between them.");
+                    return false;
+                }
+                
                 active.placeCard(row, col, this);
                 active.victoryPoints += 1; // city is 2VP total; settlement vp ignored here, we just add +1
                 return true;

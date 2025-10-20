@@ -194,6 +194,16 @@ public class Player {
                 .append("  PP=").append(progressPoints)
                 .append("\n");
 
+        // Resources banner - show current available resources
+        sb.append("\nResources: ");
+        sb.append("Brick=").append(getResourceCount("Brick")).append("  ");
+        sb.append("Grain=").append(getResourceCount("Grain")).append("  ");
+        sb.append("Lumber=").append(getResourceCount("Lumber")).append("  ");
+        sb.append("Wool=").append(getResourceCount("Wool")).append("  ");
+        sb.append("Ore=").append(getResourceCount("Ore")).append("  ");
+        sb.append("Gold=").append(getResourceCount("Gold"));
+        sb.append("\n");
+
         return sb.toString();
     }
 
