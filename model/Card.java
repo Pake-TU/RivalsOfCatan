@@ -365,14 +365,14 @@ public class Card implements Comparable<Card> {
             }
 
             if (nmEquals(nm, "Road")) {
-                // Roads require a settlement or city on both the left and right
+                // Roads cannot be placed next to other roads (left or right)
                 Card L1 = active.getCard(row, col - 1);
                 Card R1 = active.getCard(row, col + 1);
-                boolean hasLeftSettlementOrCity = (L1 != null && (nmEquals(L1.name, "Settlement") || nmEquals(L1.name, "City")));
-                boolean hasRightSettlementOrCity = (R1 != null && (nmEquals(R1.name, "Settlement") || nmEquals(R1.name, "City")));
+                boolean hasLeftRoad = (L1 != null && nmEquals(L1.name, "Road"));
+                boolean hasRightRoad = (R1 != null && nmEquals(R1.name, "Road"));
                 
-                if (!hasLeftSettlementOrCity || !hasRightSettlementOrCity) {
-                    active.sendMessage("Road must be placed between a Settlement/City on the left and a Settlement/City on the right.");
+                if (hasLeftRoad || hasRightRoad) {
+                    active.sendMessage("Road cannot be placed next to another Road. Roads must be separated by Settlements or Cities.");
                     return false;
                 }
                 
