@@ -1,3 +1,7 @@
+import model.*;
+import network.OnlinePlayer;
+import util.CostParser;
+
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -10,22 +14,13 @@ public class Server {
     public ServerSocket serverSocket;
     private final Random rng = new Random();
 
-    // Production helpers
-    private static final Map<String, String> REGION_TO_RESOURCE = Map.of(
-            "Forest", "Lumber",
-            "Field", "Grain",
-            "Pasture", "Wool",
-            "Hill", "Brick",
-            "Mountain", "Ore",
-            "Gold Field", "Gold");
-
     // Event die faces
-    private static final int EV_BRIGAND = 1;
-    private static final int EV_TRADE = 2;
-    private static final int EV_CELEB = 3;
-    private static final int EV_PLENTY = 4;
-    private static final int EV_EVENT_A = 5;
-    private static final int EV_EVENT_B = 6;
+    private static final int EV_BRIGAND = EventType.BRIGAND;
+    private static final int EV_TRADE = EventType.TRADE;
+    private static final int EV_CELEB = EventType.CELEBRATION;
+    private static final int EV_PLENTY = EventType.PLENTIFUL_HARVEST;
+    private static final int EV_EVENT_A = EventType.EVENT_A;
+    private static final int EV_EVENT_B = EventType.EVENT_B;
 
     // ---------- Bootstrap ----------
     public static void main(String[] args) {
@@ -1103,8 +1098,7 @@ public class Server {
     private boolean payCost(Player p, String cost) {
         if (cost == null || cost.isBlank())
             return true;
-        // Cost like "1 Brick, 1 Grain, 1 Wool, 1 Lumber" etc.
-        Map<String, Integer> need = parseCost(cost);
+        Map<String, Integer> need = CostParser.parseCost(cost);
         for (var e : need.entrySet()) {
             if (p.getResourceCount(e.getKey()) < e.getValue())
                 return false;
@@ -1118,51 +1112,13 @@ public class Server {
     private void refundCost(Player p, String cost) {
         if (cost == null || cost.isBlank())
             return;
-        Map<String, Integer> need = parseCost(cost);
+        Map<String, Integer> need = CostParser.parseCost(cost);
         for (var e : need.entrySet())
             p.setResourceCount(e.getKey(), p.getResourceCount(e.getKey()) + e.getValue());
     }
 
-    // Maps single-letter cost codes to canonical resource names used everywhere
-    // else.
-    // B=Brick, G=Grain, L=Lumber, W=Wool, O=Ore, A=Gold
-    private String letterToResource(char ch) {
-        switch (Character.toUpperCase(ch)) {
-            case 'B':
-                return "Brick";
-            case 'G':
-                return "Grain";
-            case 'L':
-                return "Lumber";
-            case 'W':
-                return "Wool";
-            case 'O':
-                return "Ore";
-            case 'A':
-                return "Gold";
-            default:
-                return null; // unknown / ignore
-        }
-    }
-
     private Map<String, Integer> parseCost(String cost) {
-        Map<String, Integer> m = new HashMap<>();
-        if (cost == null)
-            return m;
-
-        // Accept strings like "LW", "AA", with optional spaces or separators ("L,W", "A
-        // A")
-        for (int i = 0; i < cost.length(); i++) {
-            char ch = cost.charAt(i);
-            if (Character.isWhitespace(ch) || ch == ',' || ch == ';' || ch == '+')
-                continue;
-            String res = letterToResource(ch);
-            if (res != null) {
-                m.put(res, m.getOrDefault(res, 0) + 1);
-            }
-            // else: silently ignore unknown chars
-        }
-        return m;
+        return CostParser.parseCost(cost);
     }
 
     // Large Trade Ship trade: side L/R relative to a placed LTS@row,col
@@ -1195,7 +1151,7 @@ public class Server {
         // trade if fromRegion’s
         // produced resource type matches `twoFrom` and has at least 2; grant +1 to
         // `oneTo` by increasing toRegion
-        String fromType = REGION_TO_RESOURCE.getOrDefault(fromRegion.name, "");
+        String fromType = ResourceType.REGION_TO_RESOURCE.getOrDefault(fromRegion.name, "");
         if (!fromType.equalsIgnoreCase(twoFrom))
             return false;
         if (fromRegion.regionProduction < 2)
@@ -1203,7 +1159,7 @@ public class Server {
 
         fromRegion.regionProduction -= 2;
         // Grant the “oneTo”: if it matches toRegion’s type, store there; else bank
-        String toType = REGION_TO_RESOURCE.getOrDefault(toRegion.name, "");
+        String toType = ResourceType.REGION_TO_RESOURCE.getOrDefault(toRegion.name, "");
         if (toType.equalsIgnoreCase(oneTo)) {
             toRegion.regionProduction = Math.min(3, toRegion.regionProduction + 1);
         } else {
@@ -1279,11 +1235,7 @@ public class Server {
     }
 
     private int readInt(String s, int def) {
-        try {
-            return Integer.parseInt(s.trim());
-        } catch (Exception e) {
-            return def;
-        }
+        return CostParser.parseInt(s, def);
     }
 
     // ---------- Exchange (with Parish Hall discount) ----------

@@ -1,3 +1,5 @@
+package model;
+
 import java.util.*;
 
 public class Player {
@@ -375,27 +377,7 @@ public class Player {
 
     // Map a resource name to its Region card name
     private String resourceToRegion(String type) {
-        if (type == null)
-            return null;
-        String t = type.trim().toLowerCase();
-        switch (t) {
-            case "brick":
-                return "Hill";
-            case "grain":
-                return "Field";
-            case "lumber":
-                return "Forest";
-            case "wool":
-                return "Pasture";
-            case "ore":
-                return "Mountain";
-            case "gold":
-                return "Gold Field";
-            case "any":
-                return "Any";
-            default:
-                return null;
-        }
+        return ResourceType.resourceToRegion(type);
     }
 
     // Collect all Region cards of a given region-name (e.g., "Forest")
