@@ -1,12 +1,18 @@
 package controller;
 
+import controller.interfaces.IGameManager;
 import model.*;
 import java.util.*;
 
 /**
  * Manages game initialization and principality setup.
  */
-public class InitializationManager {
+public class InitializationManager implements IGameManager {
+    
+    @Override
+    public String getPhaseName() {
+        return "Initialization";
+    }
 
     /**
      * Initialize both players' principalities with starting regions and buildings.

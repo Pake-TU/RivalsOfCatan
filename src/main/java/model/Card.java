@@ -151,8 +151,15 @@ public class Card implements Comparable<Card> {
     public static void loadBasicCards(String jsonPath) throws IOException {
         Vector<Card> allBasic = new Vector<>();
 
-        try (FileReader fr = new FileReader(jsonPath)) {
-            JsonElement root = JsonParser.parseReader(fr);
+        // Try to load from classpath first (for Maven), then from filesystem
+        java.io.InputStream is = Card.class.getClassLoader().getResourceAsStream(jsonPath);
+        if (is == null) {
+            // Fall back to filesystem (for backward compatibility)
+            is = new java.io.FileInputStream(jsonPath);
+        }
+        
+        try (java.io.InputStreamReader isr = new java.io.InputStreamReader(is)) {
+            JsonElement root = JsonParser.parseReader(isr);
             if (!root.isJsonArray())
                 throw new IOException("cards.json: expected top-level array");
             JsonArray arr = root.getAsJsonArray();
@@ -527,18 +534,12 @@ public class Card implements Comparable<Card> {
                     active.sendMessage("You need at least 2 resources to play Merchant Caravan.");
                     return false;
                 }
-                // Just let player pick 2 to discard, then 2 to gain
-                // (opting out by discarding and gaining same resource is allowed)
+                // Let player pick 2 to discard with validation, then 2 to gain with validation
                 for (int i = 0; i < 2; i++) {
-                    active.sendMessage(
-                            "PROMPT: Type Discard resource #" + (i + 1) + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                    String g = active.receiveMessage();
-                    active.removeResource(g, 1);
+                    active.promptAndRemoveResource("Type Discard resource #" + (i + 1));
                 }
                 for (int i = 0; i < 2; i++) {
-                    active.sendMessage(
-                            "PROMPT: Type Gain resource #" + (i + 1) + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                    String g = active.receiveMessage();
+                    String g = active.validateAndPromptResource("Type Gain resource #" + (i + 1));
                     active.gainResource(g);
                 }
                 return true;
@@ -565,8 +566,7 @@ public class Card implements Comparable<Card> {
                 }
                 active.sendMessage("Goldsmith: choose two resources to gain:");
                 for (int i = 1; i <= 2; i++) {
-                    active.sendMessage("Pick resource #" + i + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
-                    String g = active.receiveMessage();
+                    String g = active.validateAndPromptResource("Pick resource #" + i);
                     active.gainResource(g);
                 }
                 return true;

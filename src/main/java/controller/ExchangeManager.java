@@ -1,5 +1,6 @@
 package controller;
 
+import controller.interfaces.IGameManager;
 import model.*;
 import util.CostParser;
 import java.util.*;
@@ -7,7 +8,12 @@ import java.util.*;
 /**
  * Manages card exchange phase.
  */
-public class ExchangeManager {
+public class ExchangeManager implements IGameManager {
+    
+    @Override
+    public String getPhaseName() {
+        return "Exchange";
+    }
 
     /**
      * Execute the exchange phase for a player.
