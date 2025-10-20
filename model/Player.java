@@ -458,15 +458,18 @@ public class Player {
     public void gainResource(String type) {
         String t = type;
         if (t == null || t.equalsIgnoreCase("Any")) {
-            sendMessage("PROMPT: Choose resource to gain (Brick/Grain/Lumber/Wool/Ore/Gold):");
-            t = receiveMessage();
-        }
-        String regionName = resourceToRegion(t);
-        if (regionName == null || "Any".equals(regionName)) {
-            sendMessage("Unknown resource '" + t + "'. Ignored.");
-            return;
+            t = validateAndPromptResource("Choose resource to gain");
+        } else {
+            // Validate the provided resource type
+            String regionName = resourceToRegion(t);
+            if (regionName == null || "Any".equals(regionName)) {
+                // Invalid resource, prompt for correct input
+                sendMessage("Unknown resource '" + t + "'.");
+                t = validateAndPromptResource("Please enter a valid resource");
+            }
         }
 
+        String regionName = resourceToRegion(t);
         java.util.List<Card> regs = findRegions(regionName);
         if (regs.isEmpty()) {
             sendMessage("No region for resource " + t + " is present.");
@@ -492,6 +495,28 @@ public class Player {
             sendMessage("No storage space on any " + regionName + " (already 3/3).");
         }
     }
+    
+    /**
+     * Prompts the player for a valid resource until they provide a correct one.
+     * 
+     * @param promptMessage The message to display when asking for input
+     * @return A validated resource type name (Brick, Grain, Lumber, Wool, Ore, or Gold)
+     */
+    public String validateAndPromptResource(String promptMessage) {
+        while (true) {
+            sendMessage("PROMPT: " + promptMessage + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
+            String input = receiveMessage();
+            if (input == null) {
+                input = "";
+            }
+            String regionName = resourceToRegion(input.trim());
+            if (regionName != null && !"Any".equals(regionName)) {
+                // Valid resource type
+                return input.trim();
+            }
+            sendMessage("Invalid resource '" + input + "'. Please enter one of: Brick, Grain, Lumber, Wool, Ore, or Gold.");
+        }
+    }
 
     // Remove N resources of a type: repeatedly remove from the region with the
     // HIGHEST stock (>0)
@@ -500,9 +525,13 @@ public class Player {
     public boolean removeResource(String type, int n) {
         if (n <= 0)
             return true;
+        
+        // Validate resource type
         String regionName = resourceToRegion(type);
-        if (regionName == null || "Any".equals(regionName))
+        if (regionName == null || "Any".equals(regionName)) {
+            sendMessage("Invalid resource type '" + type + "' for removal.");
             return false;
+        }
 
         java.util.List<Card> regs = findRegions(regionName);
         if (regs.isEmpty())
@@ -526,6 +555,36 @@ public class Player {
             removed++;
         }
         return removed == n;
+    }
+    
+    /**
+     * Prompts the player to discard a resource with validation and retry on invalid input.
+     * 
+     * @param promptMessage The message to display when asking for input
+     * @return The validated resource type that was discarded
+     */
+    public String promptAndRemoveResource(String promptMessage) {
+        while (true) {
+            sendMessage("PROMPT: " + promptMessage + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
+            String input = receiveMessage();
+            if (input == null) {
+                input = "";
+            }
+            String trimmedInput = input.trim();
+            String regionName = resourceToRegion(trimmedInput);
+            
+            if (regionName == null || "Any".equals(regionName)) {
+                sendMessage("Invalid resource '" + input + "'. Please enter one of: Brick, Grain, Lumber, Wool, Ore, or Gold.");
+                continue;
+            }
+            
+            // Try to remove the resource
+            if (removeResource(trimmedInput, 1)) {
+                return trimmedInput;
+            } else {
+                sendMessage("You don't have any " + trimmedInput + " to discard. Please choose another resource.");
+            }
+        }
     }
 
     // Set total stored resources for a type by redistributing across its regions.
