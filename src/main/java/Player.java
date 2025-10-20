@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class Player {
+public class Player implements IPlayer {
     // --- “Public on purpose” for the exam ---
     public int victoryPoints = 0;
     public int progressPoints = 0;
@@ -334,26 +334,6 @@ public class Player {
         return t.toString();
     }
 
-    // Advantage tokens depend on being >= 3 ahead of the opponent.
-    public boolean hasTradeTokenAgainst(Player opp) {
-        return (this.commercePoints - (opp == null ? 0 : opp.commercePoints)) >= 3;
-    }
-
-    public boolean hasStrengthTokenAgainst(Player opp) {
-        return (this.strengthPoints - (opp == null ? 0 : opp.strengthPoints)) >= 3;
-    }
-
-    // Final score used for win check: base VP + 1 per advantage token against
-    // opponent
-    public int currentScoreAgainst(Player opp) {
-        int score = this.victoryPoints;
-        if (hasTradeTokenAgainst(opp))
-            score += 1;
-        if (hasStrengthTokenAgainst(opp))
-            score += 1;
-        return score;
-    }
-
     private String firstWord(String s) {
         if (s == null)
             return "";
@@ -629,5 +609,78 @@ public class Player {
     public String chooseResource() {
         sendMessage("PROMPT: Choose resource:");
         return receiveMessage();
+    }
+
+    // ------------- IPlayer interface implementations -------------
+    @Override
+    public int getVictoryPoints() {
+        return victoryPoints;
+    }
+
+    @Override
+    public void setVictoryPoints(int points) {
+        this.victoryPoints = points;
+    }
+
+    @Override
+    public int getProgressPoints() {
+        return progressPoints;
+    }
+
+    @Override
+    public void setProgressPoints(int points) {
+        this.progressPoints = points;
+    }
+
+    @Override
+    public int getSkillPoints() {
+        return skillPoints;
+    }
+
+    @Override
+    public void setSkillPoints(int points) {
+        this.skillPoints = points;
+    }
+
+    @Override
+    public int getCommercePoints() {
+        return commercePoints;
+    }
+
+    @Override
+    public void setCommercePoints(int points) {
+        this.commercePoints = points;
+    }
+
+    @Override
+    public int getStrengthPoints() {
+        return strengthPoints;
+    }
+
+    @Override
+    public void setStrengthPoints(int points) {
+        this.strengthPoints = points;
+    }
+
+    @Override
+    public boolean hasTradeTokenAgainst(IPlayer opp) {
+        if (opp == null) return false;
+        return (this.commercePoints - opp.getCommercePoints()) >= 3;
+    }
+
+    @Override
+    public boolean hasStrengthTokenAgainst(IPlayer opp) {
+        if (opp == null) return false;
+        return (this.strengthPoints - opp.getStrengthPoints()) >= 3;
+    }
+
+    @Override
+    public int currentScoreAgainst(IPlayer opp) {
+        int score = this.victoryPoints;
+        if (hasTradeTokenAgainst(opp))
+            score += 1;
+        if (hasStrengthTokenAgainst(opp))
+            score += 1;
+        return score;
     }
 }

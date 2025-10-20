@@ -1,8 +1,74 @@
 # RivalsOfCatan
-This is for a school assignment
+This is for a school assignment - a digital implementation of the Rivals of Catan card game.
 
-# Folder structure
-This structure was discussed with a classmate, Simon Pergel, and we agreed that this structure looks good.
+## Building the Project
+
+This project uses Maven for dependency management and building. Make sure you have Maven installed (version 3.6+ recommended).
+
+### Compile the project
+```bash
+mvn clean compile
+```
+
+### Package as JAR
+```bash
+mvn clean package
+```
+
+This will create two JAR files in the `target/` directory:
+- `rivals-of-catan-1.0-SNAPSHOT.jar` - Basic JAR
+- `rivals-of-catan-1.0-SNAPSHOT-with-dependencies.jar` - Fat JAR with all dependencies included
+
+## Running the Game
+
+### Local game (console)
+```bash
+java -jar target/rivals-of-catan-1.0-SNAPSHOT-with-dependencies.jar
+```
+
+### With bot opponent
+```bash
+java -jar target/rivals-of-catan-1.0-SNAPSHOT-with-dependencies.jar bot
+```
+
+### Online multiplayer (server)
+```bash
+java -jar target/rivals-of-catan-1.0-SNAPSHOT-with-dependencies.jar
+```
+
+### Online multiplayer (client)
+```bash
+java -jar target/rivals-of-catan-1.0-SNAPSHOT-with-dependencies.jar online
+```
+
+## Current Project Structure
+
+The project follows Maven standard directory layout:
+
+```
+rivals-of-catan/
+├── pom.xml                             // Maven configuration
+├── src/
+│   ├── main/
+│   │   ├── java/                       // Java source files
+│   │   │   ├── Card.java               // Card model and effects
+│   │   │   ├── Player.java             // Player implementation
+│   │   │   ├── OnlinePlayer.java       // Network player implementation
+│   │   │   ├── Server.java             // Game server and logic
+│   │   │   ├── IPlayer.java            // Player interface
+│   │   │   ├── IPlayerIO.java          // I/O abstraction interface
+│   │   │   ├── IResourceManager.java   // Resource management interface
+│   │   │   └── ICardEffect.java        // Card effect interface
+│   │   └── resources/
+│   │       └── cards.json              // Card definitions
+│   └── test/
+│       └── java/                       // Test files (to be added)
+└── target/                             // Build output (generated)
+```
+
+## Planned Future Structure
+
+This structure was discussed with a classmate, Simon Pergel, as a target for future refactoring:
 
 ```
 src/
@@ -71,3 +137,10 @@ src/
 └── tests/
     └── To be added
 ```
+
+## Recent Improvements
+
+- **Input Validation**: Resource selection now validates input and re-prompts on invalid entries (fixes Merchant Caravan issue)
+- **Maven Build System**: Project now uses Maven for dependency management and building
+- **Interfaces**: Added interfaces (IPlayer, IPlayerIO, IResourceManager, ICardEffect) for better modularity and extensibility
+- **Resource Loading**: Cards are now loaded from classpath, supporting both JAR execution and development
