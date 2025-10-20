@@ -1,5 +1,6 @@
 package controller;
 
+import controller.interfaces.IGameManager;
 import model.*;
 import util.CostParser;
 import java.util.*;
@@ -7,7 +8,12 @@ import java.util.*;
 /**
  * Manages hand replenishment for players.
  */
-public class ReplenishManager {
+public class ReplenishManager implements IGameManager {
+    
+    @Override
+    public String getPhaseName() {
+        return "Replenish";
+    }
 
     /**
      * Replenish a player's hand to the target size.

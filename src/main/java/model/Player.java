@@ -1,8 +1,9 @@
 package model;
 
+import model.interfaces.IPlayer;
 import java.util.*;
 
-public class Player {
+public class Player implements IPlayer {
     // --- “Public on purpose” for the exam ---
     public int victoryPoints = 0;
     public int progressPoints = 0;
@@ -674,5 +675,46 @@ public class Player {
     public String chooseResource() {
         sendMessage("PROMPT: Choose resource:");
         return receiveMessage();
+    }
+    
+    // ------------- IPlayer interface implementations (getters) -------------
+    @Override
+    public List<List<Card>> getPrincipality() {
+        return principality;
+    }
+    
+    @Override
+    public List<Card> getHand() {
+        return hand;
+    }
+    
+    @Override
+    public boolean isBot() {
+        return isBot;
+    }
+    
+    @Override
+    public int getVictoryPoints() {
+        return victoryPoints;
+    }
+    
+    @Override
+    public int getCommercePoints() {
+        return commercePoints;
+    }
+    
+    @Override
+    public int getStrengthPoints() {
+        return strengthPoints;
+    }
+    
+    @Override
+    public int getSkillPoints() {
+        return skillPoints;
+    }
+    
+    @Override
+    public int getProgressPoints() {
+        return progressPoints;
     }
 }

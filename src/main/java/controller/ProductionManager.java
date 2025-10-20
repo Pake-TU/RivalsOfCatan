@@ -1,5 +1,6 @@
 package controller;
 
+import controller.interfaces.IGameManager;
 import model.*;
 import java.util.*;
 
@@ -7,7 +8,12 @@ import java.util.*;
  * Manages resource production logic for regions.
  * Handles production phase including marketplace and booster effects.
  */
-public class ProductionManager {
+public class ProductionManager implements IGameManager {
+    
+    @Override
+    public String getPhaseName() {
+        return "Production";
+    }
 
     /**
      * Apply production based on the dice roll.
