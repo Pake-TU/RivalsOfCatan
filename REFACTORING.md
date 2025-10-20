@@ -96,9 +96,10 @@ Reusable utilities:
 
 ### For Deployers
 
-1. **Compilation**: Compile with `javac -cp ".:gson.jar" model/*.java util/*.java network/*.java controller/*.java Server.java`
-2. **Execution**: Run with `java -cp ".:gson.jar" Server [bot|online]`
-3. **No Breaking Changes**: All original functionality preserved
+1. **Compilation**: Compile with Maven: `mvn clean compile`
+2. **Execution**: Run with `java -cp target/classes Main [bot|online]`
+3. **Packaging**: Build fat JAR with `mvn package`
+4. **No Breaking Changes**: All original functionality preserved
 
 ## Security Considerations
 

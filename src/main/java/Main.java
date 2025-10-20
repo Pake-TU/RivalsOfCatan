@@ -46,6 +46,13 @@ public class Main {
     /**
      * Runs the client-side connection to a remote game server.
      * Handles bidirectional communication with the server through object streams.
+     * 
+     * SECURITY NOTE: This method uses Java serialization (ObjectInputStream/ObjectOutputStream)
+     * which has known security vulnerabilities. This implementation includes basic validation
+     * to only accept String objects, but for production use, consider:
+     * - Using a safer serialization format (JSON, Protocol Buffers, etc.)
+     * - Implementing proper authentication and authorization
+     * - Using encrypted connections (TLS/SSL)
      *
      * @throws Exception if connection fails or communication errors occur
      */
@@ -62,8 +69,10 @@ public class Main {
         try {
             while (true) {
                 Object obj = inFromServer.readObject();
+                // Security: Only accept String objects to prevent deserialization attacks
                 if (!(obj instanceof String)) {
-                    // ignore unexpected payloads
+                    System.err.println("[Client] Security: Rejected non-String object: " + 
+                        (obj == null ? "null" : obj.getClass().getName()));
                     continue;
                 }
                 String msg = (String) obj;

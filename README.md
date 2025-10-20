@@ -24,14 +24,14 @@ mvn test
 ### Running the Game
 ```bash
 # Run with bot player (default)
-java -cp target/classes:target/dependency/* Server bot
+java -cp target/classes:target/dependency/* Main bot
 
 # Run with online multiplayer (2 players)
 # Terminal 1 (server):
-java -cp target/classes:target/dependency/* Server
+java -cp target/classes:target/dependency/* Main
 
 # Terminal 2 (client):
-java -cp target/classes:target/dependency/* Server online
+java -cp target/classes:target/dependency/* Main online
 
 # Or use the fat JAR:
 java -jar target/rivals-of-catan-1.0.0-SNAPSHOT-with-dependencies.jar bot
@@ -67,7 +67,8 @@ src/main/java/
 │   ├── DiceRoller.java                 // Dice rolling logic
 │   └── CostParser.java                 // Cost parsing utilities
 │
-└── Server.java                         // Main game coordinator
+├── Main.java                           // Application entry point and client connection
+└── Server.java                         // Game coordinator and server logic
 
 src/main/resources/
 └── cards.json                          // Card definitions
