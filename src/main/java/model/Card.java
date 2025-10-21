@@ -477,9 +477,7 @@ public class Card implements Comparable<Card> {
                 // (cap 3).
                 active.placeCard(row, col, this);
                 System.out.println("Contained Building");
-                if (nmEquals(nm, "Abbey")) {
-                    active.progressPoints += 1;
-                } else if (nmEquals(nm, "Marketplace")) {
+                if (nmEquals(nm, "Marketplace")) {
                     active.flags.add("MARKETPLACE");
                 } else if (nmEquals(nm, "Parish Hall")) {
                     active.flags.add("PARISH");
@@ -487,12 +485,9 @@ public class Card implements Comparable<Card> {
                     active.flags.add("STOREHOUSE@" + row + "," + col);
                 } else if (nmEquals(nm, "Toll Bridge")) {
                     active.flags.add("TOLLB");
-                    // Toll Bridge also grants 1 Commerce Point when placed
-                    int cp = asInt(CP, 0);
-                    if (cp != 0) {
-                        active.commercePoints += cp;
-                    }
                 }
+                // Add stats from the card (CP, SP, FP, PP, KP)
+                addCardStats(active);
                 return true;
             }
 
@@ -503,6 +498,8 @@ public class Card implements Comparable<Card> {
                 if (nmEquals(nm, "Large Trade Ship")) {
                     active.placeCard(row, col, this);
                     active.flags.add("LTS@" + row + "," + col);
+                    // Add stats from the card
+                    addCardStats(active);
                     return true;
                 }
                 // “Common” trade ships: 2:1 bank for specific resource (handled in Server)
@@ -510,22 +507,14 @@ public class Card implements Comparable<Card> {
                     active.placeCard(row, col, this);
                     String res = nm.split("\\s+")[0]; // Brick/Gold/Grain/Lumber/Ore/Wool
                     active.flags.add("2FOR1_" + res.toUpperCase());
+                    // Add stats from the card
+                    addCardStats(active);
                     return true;
                 }
 
                 // Heroes: just add SP/FP/CP/etc.
-                int sp = asInt(SP, 0), fp = asInt(FP, 0), cp = asInt(CP, 0), pp = asInt(PP, 0), kp = asInt(KP, 0);
-                if (sp != 0)
-                    active.skillPoints += sp;
-                if (fp != 0)
-                    active.strengthPoints += fp;
-                if (cp != 0)
-                    active.commercePoints += cp;
-                if (pp != 0)
-                    active.progressPoints += pp;
-                if (kp != 0)
-                    active.victoryPoints += kp;
                 active.placeCard(row, col, this);
+                addCardStats(active);
                 return true;
             }
         }
@@ -674,5 +663,25 @@ public class Card implements Comparable<Card> {
             return false;
         String pl = (c.placement == null ? "" : c.placement.toLowerCase());
         return pl.contains("expansion");
+    }
+
+    // Helper to add card stats to player when card is played/placed
+    private void addCardStats(Player p) {
+        int sp = asInt(SP, 0);
+        int fp = asInt(FP, 0);
+        int cp = asInt(CP, 0);
+        int pp = asInt(PP, 0);
+        int kp = asInt(KP, 0);
+        
+        if (sp != 0)
+            p.skillPoints += sp;
+        if (fp != 0)
+            p.strengthPoints += fp;
+        if (cp != 0)
+            p.commercePoints += cp;
+        if (pp != 0)
+            p.progressPoints += pp;
+        if (kp != 0)
+            p.victoryPoints += kp;
     }
 }
