@@ -39,79 +39,79 @@ public class AdvantageTokenTest {
 
     @Test
     public void testTradeAdvantageRequires3CPAhead() {
-        // Player1 has 2 CP, Player2 has 0 CP - not enough for advantage
+        // Player1 has 2 CP, Player2 has 0 CP - player1 has <3, not enough for advantage
         player1.commercePoints = 2;
         player2.commercePoints = 0;
         
-        assertFalse(player1.hasTradeTokenAgainst(player2), "2 CP ahead is not enough");
+        assertFalse(player1.hasTradeTokenAgainst(player2), "Less than 3 CP is not enough");
         assertEquals(0, player1.currentScoreAgainst(player2), "Should have 0 total VP (no base VP, no advantage)");
         
-        // Add 1 more CP to reach 3 ahead
+        // Add 1 more CP to reach 3 total (and still ahead by 3)
         player1.commercePoints = 3;
         
-        assertTrue(player1.hasTradeTokenAgainst(player2), "3 CP ahead should give advantage");
+        assertTrue(player1.hasTradeTokenAgainst(player2), "3 CP and 1+ ahead should give advantage");
         assertEquals(1, player1.currentScoreAgainst(player2), "Should have 1 total VP (0 base + 1 advantage)");
     }
 
     @Test
     public void testStrengthAdvantageRequires3FPAhead() {
-        // Player1 has 2 FP, Player2 has 0 FP - not enough for advantage
+        // Player1 has 2 FP, Player2 has 0 FP - player1 has <3, not enough for advantage
         player1.strengthPoints = 2;
         player2.strengthPoints = 0;
         
-        assertFalse(player1.hasStrengthTokenAgainst(player2), "2 FP ahead is not enough");
+        assertFalse(player1.hasStrengthTokenAgainst(player2), "Less than 3 FP is not enough");
         assertEquals(0, player1.currentScoreAgainst(player2), "Should have 0 total VP");
         
-        // Add 1 more FP to reach 3 ahead
+        // Add 1 more FP to reach 3 total (and still ahead)
         player1.strengthPoints = 3;
         
-        assertTrue(player1.hasStrengthTokenAgainst(player2), "3 FP ahead should give advantage");
+        assertTrue(player1.hasStrengthTokenAgainst(player2), "3 FP and 1+ ahead should give advantage");
         assertEquals(1, player1.currentScoreAgainst(player2), "Should have 1 total VP (0 base + 1 advantage)");
     }
 
     @Test
     public void testOnlyOnePlayerCanHaveTradeAdvantage() {
-        // Player1 ahead by 3
+        // Player1 has 5 CP, Player2 has 2 CP (both >= 3, player1 ahead by 3)
         player1.commercePoints = 5;
         player2.commercePoints = 2;
         
-        assertTrue(player1.hasTradeTokenAgainst(player2), "Player1 should have advantage");
-        assertFalse(player2.hasTradeTokenAgainst(player1), "Player2 should NOT have advantage");
+        assertTrue(player1.hasTradeTokenAgainst(player2), "Player1 should have advantage (5 > 2)");
+        assertFalse(player2.hasTradeTokenAgainst(player1), "Player2 should NOT have advantage (2 < 5)");
         
-        // Now player2 catches up and goes ahead by 3
-        player2.commercePoints = 9;
+        // Now player2 catches up and goes ahead by 1
+        player2.commercePoints = 6;
         
-        assertFalse(player1.hasTradeTokenAgainst(player2), "Player1 should lose advantage");
-        assertTrue(player2.hasTradeTokenAgainst(player1), "Player2 should gain advantage");
+        assertFalse(player1.hasTradeTokenAgainst(player2), "Player1 should lose advantage (5 < 6)");
+        assertTrue(player2.hasTradeTokenAgainst(player1), "Player2 should gain advantage (6 > 5)");
     }
 
     @Test
     public void testOnlyOnePlayerCanHaveStrengthAdvantage() {
-        // Player1 ahead by 3
+        // Player1 has 5 FP, Player2 has 2 FP (both >= 3 but player2 < 3)
         player1.strengthPoints = 5;
         player2.strengthPoints = 2;
         
-        assertTrue(player1.hasStrengthTokenAgainst(player2), "Player1 should have advantage");
-        assertFalse(player2.hasStrengthTokenAgainst(player1), "Player2 should NOT have advantage");
+        assertTrue(player1.hasStrengthTokenAgainst(player2), "Player1 should have advantage (5 > 2)");
+        assertFalse(player2.hasStrengthTokenAgainst(player1), "Player2 should NOT have advantage (2 < 3)");
         
-        // Now player2 catches up and goes ahead by 3
-        player2.strengthPoints = 9;
+        // Now player2 catches up to 3+ and goes ahead by 1
+        player2.strengthPoints = 6;
         
-        assertFalse(player1.hasStrengthTokenAgainst(player2), "Player1 should lose advantage");
-        assertTrue(player2.hasStrengthTokenAgainst(player1), "Player2 should gain advantage");
+        assertFalse(player1.hasStrengthTokenAgainst(player2), "Player1 should lose advantage (5 < 6)");
+        assertTrue(player2.hasStrengthTokenAgainst(player1), "Player2 should gain advantage (6 > 5)");
     }
 
     @Test
     public void testAdvantageVPIsDynamic() {
-        // Start with player1 having advantage
+        // Start with player1 having advantage (3 CP, ahead of opponent)
         player1.commercePoints = 3;
         player1.victoryPoints = 2; // 2 base VP
         player2.commercePoints = 0;
         
         assertEquals(3, player1.currentScoreAgainst(player2), "Should have 3 total VP (2 base + 1 advantage)");
         
-        // Player2 catches up, player1 loses advantage
-        player2.commercePoints = 1; // now only 2 ahead, loses advantage
+        // Player2 catches up to tie, player1 loses advantage (needs to be ahead)
+        player2.commercePoints = 3; // now tied, loses advantage
         
         assertEquals(2, player1.currentScoreAgainst(player2), "Should have 2 total VP (2 base, no advantage)");
         assertEquals(2, player1.victoryPoints, "Base VP should still be 2 (unchanged)");
@@ -133,22 +133,23 @@ public class AdvantageTokenTest {
 
     @Test
     public void testAdvantageRequiresBeingAhead() {
-        // Both players have 3 CP - no one should have advantage
+        // Both players have 3 CP - no one should have advantage (need to be ahead)
         player1.commercePoints = 3;
         player2.commercePoints = 3;
         
         assertFalse(player1.hasTradeTokenAgainst(player2), "Equal CP means no advantage");
         assertFalse(player2.hasTradeTokenAgainst(player1), "Equal CP means no advantage");
         
-        // Player1 has 3, Player2 has 1 - player1 is 2 ahead (not enough)
-        player2.commercePoints = 1;
+        // Player1 has 3, Player2 has 2 - player1 is 1 ahead (enough with >= 3 CP!)
+        player2.commercePoints = 2;
         
-        assertFalse(player1.hasTradeTokenAgainst(player2), "Only 2 ahead is not enough");
+        assertTrue(player1.hasTradeTokenAgainst(player2), "3 CP and 1 ahead should give advantage");
+        assertFalse(player2.hasTradeTokenAgainst(player1), "Player2 has only 2 CP (< 3)");
         
-        // Player1 has 3, Player2 has 0 - player1 is 3 ahead (enough!)
+        // Player1 has 3, Player2 has 0 - player1 is 3 ahead (also enough!)
         player2.commercePoints = 0;
         
-        assertTrue(player1.hasTradeTokenAgainst(player2), "3 ahead should give advantage");
+        assertTrue(player1.hasTradeTokenAgainst(player2), "3 CP and ahead should give advantage");
     }
 
     @Test
