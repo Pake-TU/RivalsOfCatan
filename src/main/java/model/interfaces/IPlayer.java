@@ -125,4 +125,25 @@ public interface IPlayer {
      * @return Current progress points
      */
     int getProgressPoints();
+    
+    /**
+     * Check if this player has the trade advantage token against opponent.
+     * @param opponent The opponent player
+     * @return true if this player has trade advantage
+     */
+    boolean hasTradeTokenAgainst(IPlayer opponent);
+    
+    /**
+     * Check if this player has the strength advantage token against opponent.
+     * @param opponent The opponent player
+     * @return true if this player has strength advantage
+     */
+    boolean hasStrengthTokenAgainst(IPlayer opponent);
+    
+    /**
+     * Get the current score including advantage tokens.
+     * @param opponent The opponent player
+     * @return Total score with advantage bonuses
+     */
+    int currentScoreAgainst(IPlayer opponent);
 }
