@@ -208,4 +208,39 @@ public class AdvantageTokenTest {
         assertFalse(summary.contains("Strength+1"), "Should not show strength advantage");
         assertFalse(summary.contains("Total:"), "Should not show total when same as base");
     }
+
+    @Test
+    public void testPrintPrincipalityShowsAdvantages() {
+        // Set up player with both advantages
+        player1.commercePoints = 4;
+        player1.strengthPoints = 5;
+        player1.victoryPoints = 2;
+        player2.commercePoints = 0;
+        player2.strengthPoints = 0;
+        
+        String principality = player1.printPrincipality(player2);
+        
+        assertTrue(principality.contains("VP=2"), "Should show base VP");
+        assertTrue(principality.contains("Trade+1"), "Should show trade advantage");
+        assertTrue(principality.contains("Strength+1"), "Should show strength advantage");
+        assertTrue(principality.contains("Total: 4"), "Should show total including advantages");
+        assertTrue(principality.contains("CP=4"), "Should show CP");
+        assertTrue(principality.contains("FP=5"), "Should show FP");
+    }
+
+    @Test
+    public void testPrintPrincipalityWithoutAdvantages() {
+        player1.commercePoints = 1;
+        player1.strengthPoints = 1;
+        player1.victoryPoints = 3;
+        player2.commercePoints = 0;
+        player2.strengthPoints = 0;
+        
+        String principality = player1.printPrincipality(player2);
+        
+        assertTrue(principality.contains("VP=3"), "Should show base VP");
+        assertFalse(principality.contains("Trade+1"), "Should not show trade advantage");
+        assertFalse(principality.contains("Strength+1"), "Should not show strength advantage");
+        assertFalse(principality.contains("Total:"), "Should not show total when same as base");
+    }
 }

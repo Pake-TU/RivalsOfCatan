@@ -43,7 +43,7 @@ public class FeudEventCard {
         // Ask advantage player to pick up to 3 targets
         adv.sendMessage(
                 "PROMPT: Feud - select up to 3 opponent building coordinates as 'r c;r c;r c'. Opponent board:\n"
-                        + opp.printPrincipality());
+                        + opp.printPrincipality(adv));
         String line = adv.receiveMessage();
         List<int[]> picked = new ArrayList<>();
         try {

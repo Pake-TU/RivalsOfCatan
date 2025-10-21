@@ -138,7 +138,7 @@ public class Player implements IPlayer {
     }
 
     // Nicely prints the principality with coordinates, plus hand & point summary.
-    public String printPrincipality() {
+    public String printPrincipality(Player opponent) {
         StringBuilder sb = new StringBuilder();
         int rows = principality.size();
         int cols = principality.isEmpty() ? 0 : principality.get(0).size();
@@ -193,14 +193,8 @@ public class Player implements IPlayer {
             sb.append("    ").append(buildSep(w)).append("\n");
         }
 
-        // Points line
-        sb.append("\nPoints: ")
-                .append("VP=").append(victoryPoints)
-                .append("  CP=").append(commercePoints)
-                .append("  SP=").append(skillPoints)
-                .append("  FP=").append(strengthPoints)
-                .append("  PP=").append(progressPoints)
-                .append("\n");
+        // Points line - use getPointsSummary to include advantages
+        sb.append(getPointsSummary(opponent));
 
         // Resources banner - show current available resources
         sb.append("\nResources: ");

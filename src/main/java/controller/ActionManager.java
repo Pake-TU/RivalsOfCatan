@@ -25,10 +25,10 @@ public class ActionManager implements IGameManager {
     public void actionPhase(Player active, Player other, java.util.function.Consumer<String> broadcast) {
         boolean done = false;
         active.sendMessage("Opponent's board:");
-        active.sendMessage("\t\t" + other.printPrincipality().replace("\n", "\n\t\t"));
+        active.sendMessage("\t\t" + other.printPrincipality(active).replace("\n", "\n\t\t"));
         while (!done) {
             active.sendMessage("Your board:");
-            active.sendMessage(active.printPrincipality());
+            active.sendMessage(active.printPrincipality(other));
             active.sendMessage("Your hand:");
             active.sendMessage(active.printHand());
             active.sendMessage("Action Phase:");
