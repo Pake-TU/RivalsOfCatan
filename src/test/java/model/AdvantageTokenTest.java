@@ -7,9 +7,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 
 /**
- * Tests to verify that advantage tokens are properly awarded when placing cards.
- * When a player reaches >= 3 points advantage in CP or FP over their opponent,
- * they should immediately receive +1 VP for gaining the advantage token.
+ * Tests to verify that advantage tokens work correctly:
+ * - Only one player can have advantage at a time
+ * - Advantage requires 3+ points AND being ahead of opponent
+ * - VP is calculated dynamically (not permanently added)
+ * - Advantage changes are properly detected and notified
  */
 public class AdvantageTokenTest {
 
@@ -36,153 +38,128 @@ public class AdvantageTokenTest {
     }
 
     @Test
-    public void testTradeAdvantageGainedWhenPlacingShip() {
-        // Player1 starts with 0 CP, Player2 starts with 0 CP
-        assertEquals(0, player1.commercePoints);
-        assertEquals(0, player2.commercePoints);
-        assertEquals(0, player1.victoryPoints);
-        
-        // Place a ship that gives +1 CP - not enough for advantage yet
-        Card ship1 = new Card();
-        ship1.name = "Brick Ship";
-        ship1.type = "Unit – Trade Ship";
-        ship1.placement = "Settlement/city";
-        ship1.CP = "1";
-        ship1.cost = "";
-        ship1.applyEffect(player1, player2, 1, 2);
-        
-        assertEquals(1, player1.commercePoints);
-        assertEquals(0, player1.victoryPoints, "Should not get VP yet - only 1 CP ahead");
-        
-        // Place another ship - now 2 CP ahead, still not enough
-        Card ship2 = new Card();
-        ship2.name = "Grain Ship";
-        ship2.type = "Unit – Trade Ship";
-        ship2.placement = "Settlement/city";
-        ship2.CP = "1";
-        ship2.cost = "";
-        ship2.applyEffect(player1, player2, 3, 2);
-        
-        assertEquals(2, player1.commercePoints);
-        assertEquals(0, player1.victoryPoints, "Should not get VP yet - only 2 CP ahead");
-        
-        // Place a building that gives +1 CP - now 3 CP ahead, should get advantage token!
-        Card marketplace = new Card();
-        marketplace.name = "Marketplace";
-        marketplace.type = "Building";
-        marketplace.placement = "Settlement/city";
-        marketplace.CP = "1";
-        marketplace.cost = "";
-        
-        // Place at row 1, col 1 (above the settlement which is at 2,2)
-        // Need to add another settlement first at row 2, col 1
-        Card settlement1 = new Card();
-        settlement1.name = "Settlement";
-        settlement1.type = "Settlement";
-        player1.placeCard(2, 1, settlement1);
-        
-        marketplace.applyEffect(player1, player2, 1, 1);
-        
-        assertEquals(3, player1.commercePoints);
-        assertEquals(1, player1.victoryPoints, "Should get +1 VP for trade advantage token");
-        assertTrue(player1.hasTradeTokenAgainst(player2), "Should have trade advantage");
-    }
-
-    @Test
-    public void testStrengthAdvantageGainedWhenPlacingHero() {
-        // Player1 starts with 0 FP, Player2 starts with 0 FP
-        assertEquals(0, player1.strengthPoints);
-        assertEquals(0, player2.strengthPoints);
-        assertEquals(0, player1.victoryPoints);
-        
-        // Place a hero that gives +3 FP - should immediately get advantage token
-        Card hero = new Card();
-        hero.name = "Test Hero";
-        hero.type = "Unit – Hero";
-        hero.placement = "Settlement/city";
-        hero.FP = "3";
-        hero.cost = "";
-        hero.applyEffect(player1, player2, 1, 2);
-        
-        assertEquals(3, player1.strengthPoints);
-        assertEquals(1, player1.victoryPoints, "Should get +1 VP for strength advantage token");
-        assertTrue(player1.hasStrengthTokenAgainst(player2), "Should have strength advantage");
-    }
-
-    @Test
-    public void testNoAdvantageWhenOpponentHasMorePoints() {
-        // Give player2 some CP first
-        player2.commercePoints = 5;
-        
-        // Player1 places a ship giving +1 CP
-        Card ship = new Card();
-        ship.name = "Brick Ship";
-        ship.type = "Unit – Trade Ship";
-        ship.placement = "Settlement/city";
-        ship.CP = "1";
-        ship.cost = "";
-        ship.applyEffect(player1, player2, 1, 2);
-        
-        assertEquals(1, player1.commercePoints);
-        assertEquals(0, player1.victoryPoints, "Should not get VP - opponent has more CP");
-        assertFalse(player1.hasTradeTokenAgainst(player2), "Should not have trade advantage");
-    }
-
-    @Test
-    public void testAdvantageNotGrantedTwice() {
-        // Player1 gets 3 CP first (gains advantage)
-        Card ship1 = new Card();
-        ship1.name = "Brick Ship";
-        ship1.type = "Unit – Trade Ship";
-        ship1.placement = "Settlement/city";
-        ship1.CP = "3";
-        ship1.cost = "";
-        ship1.applyEffect(player1, player2, 1, 2);
-        
-        assertEquals(3, player1.commercePoints);
-        assertEquals(1, player1.victoryPoints, "Should get +1 VP for first advantage");
-        
-        // Player1 places another ship (still has advantage, shouldn't get another VP)
-        Card ship2 = new Card();
-        ship2.name = "Grain Ship";
-        ship2.type = "Unit – Trade Ship";
-        ship2.placement = "Settlement/city";
-        ship2.CP = "1";
-        ship2.cost = "";
-        ship2.applyEffect(player1, player2, 3, 2);
-        
-        assertEquals(4, player1.commercePoints);
-        assertEquals(1, player1.victoryPoints, "Should still have only 1 VP - advantage already held");
-    }
-
-    @Test
-    public void testBothAdvantagesCanBeGainedSimultaneously() {
-        // Place a card that gives both CP and FP to gain both advantages at once
-        Card powerCard = new Card();
-        powerCard.name = "Power Card";
-        powerCard.type = "Unit – Hero";
-        powerCard.placement = "Settlement/city";
-        powerCard.CP = "3";
-        powerCard.FP = "3";
-        powerCard.cost = "";
-        powerCard.applyEffect(player1, player2, 1, 2);
-        
-        assertEquals(3, player1.commercePoints);
-        assertEquals(3, player1.strengthPoints);
-        assertEquals(2, player1.victoryPoints, "Should get +2 VP (one for each advantage)");
-        assertTrue(player1.hasTradeTokenAgainst(player2), "Should have trade advantage");
-        assertTrue(player1.hasStrengthTokenAgainst(player2), "Should have strength advantage");
-    }
-
-    @Test
-    public void testAdvantageRequiresAtLeast3PointDifference() {
-        // Give both players some points - player1 only 2 ahead
+    public void testTradeAdvantageRequires3CPAhead() {
+        // Player1 has 2 CP, Player2 has 0 CP - not enough for advantage
         player1.commercePoints = 2;
         player2.commercePoints = 0;
         
-        assertFalse(player1.hasTradeTokenAgainst(player2), "2 point difference is not enough");
+        assertFalse(player1.hasTradeTokenAgainst(player2), "2 CP ahead is not enough");
+        assertEquals(0, player1.currentScoreAgainst(player2), "Should have 0 total VP (no base VP, no advantage)");
         
-        // Add 1 more to reach 3 point difference
+        // Add 1 more CP to reach 3 ahead
+        player1.commercePoints = 3;
+        
+        assertTrue(player1.hasTradeTokenAgainst(player2), "3 CP ahead should give advantage");
+        assertEquals(1, player1.currentScoreAgainst(player2), "Should have 1 total VP (0 base + 1 advantage)");
+    }
+
+    @Test
+    public void testStrengthAdvantageRequires3FPAhead() {
+        // Player1 has 2 FP, Player2 has 0 FP - not enough for advantage
+        player1.strengthPoints = 2;
+        player2.strengthPoints = 0;
+        
+        assertFalse(player1.hasStrengthTokenAgainst(player2), "2 FP ahead is not enough");
+        assertEquals(0, player1.currentScoreAgainst(player2), "Should have 0 total VP");
+        
+        // Add 1 more FP to reach 3 ahead
+        player1.strengthPoints = 3;
+        
+        assertTrue(player1.hasStrengthTokenAgainst(player2), "3 FP ahead should give advantage");
+        assertEquals(1, player1.currentScoreAgainst(player2), "Should have 1 total VP (0 base + 1 advantage)");
+    }
+
+    @Test
+    public void testOnlyOnePlayerCanHaveTradeAdvantage() {
+        // Player1 ahead by 3
+        player1.commercePoints = 5;
+        player2.commercePoints = 2;
+        
+        assertTrue(player1.hasTradeTokenAgainst(player2), "Player1 should have advantage");
+        assertFalse(player2.hasTradeTokenAgainst(player1), "Player2 should NOT have advantage");
+        
+        // Now player2 catches up and goes ahead by 3
+        player2.commercePoints = 9;
+        
+        assertFalse(player1.hasTradeTokenAgainst(player2), "Player1 should lose advantage");
+        assertTrue(player2.hasTradeTokenAgainst(player1), "Player2 should gain advantage");
+    }
+
+    @Test
+    public void testOnlyOnePlayerCanHaveStrengthAdvantage() {
+        // Player1 ahead by 3
+        player1.strengthPoints = 5;
+        player2.strengthPoints = 2;
+        
+        assertTrue(player1.hasStrengthTokenAgainst(player2), "Player1 should have advantage");
+        assertFalse(player2.hasStrengthTokenAgainst(player1), "Player2 should NOT have advantage");
+        
+        // Now player2 catches up and goes ahead by 3
+        player2.strengthPoints = 9;
+        
+        assertFalse(player1.hasStrengthTokenAgainst(player2), "Player1 should lose advantage");
+        assertTrue(player2.hasStrengthTokenAgainst(player1), "Player2 should gain advantage");
+    }
+
+    @Test
+    public void testAdvantageVPIsDynamic() {
+        // Start with player1 having advantage
+        player1.commercePoints = 3;
+        player1.victoryPoints = 2; // 2 base VP
+        player2.commercePoints = 0;
+        
+        assertEquals(3, player1.currentScoreAgainst(player2), "Should have 3 total VP (2 base + 1 advantage)");
+        
+        // Player2 catches up, player1 loses advantage
+        player2.commercePoints = 1; // now only 2 ahead, loses advantage
+        
+        assertEquals(2, player1.currentScoreAgainst(player2), "Should have 2 total VP (2 base, no advantage)");
+        assertEquals(2, player1.victoryPoints, "Base VP should still be 2 (unchanged)");
+    }
+
+    @Test
+    public void testBothAdvantagesCanBeHeldSimultaneously() {
+        // Player1 gets both CP and FP advantages
+        player1.commercePoints = 5;
+        player1.strengthPoints = 4;
+        player1.victoryPoints = 1; // 1 base VP
+        player2.commercePoints = 0;
+        player2.strengthPoints = 0;
+        
+        assertTrue(player1.hasTradeTokenAgainst(player2), "Should have trade advantage");
+        assertTrue(player1.hasStrengthTokenAgainst(player2), "Should have strength advantage");
+        assertEquals(3, player1.currentScoreAgainst(player2), "Should have 3 total VP (1 base + 2 advantages)");
+    }
+
+    @Test
+    public void testAdvantageRequiresBeingAhead() {
+        // Both players have 3 CP - no one should have advantage
+        player1.commercePoints = 3;
+        player2.commercePoints = 3;
+        
+        assertFalse(player1.hasTradeTokenAgainst(player2), "Equal CP means no advantage");
+        assertFalse(player2.hasTradeTokenAgainst(player1), "Equal CP means no advantage");
+        
+        // Player1 has 3, Player2 has 1 - player1 is 2 ahead (not enough)
+        player2.commercePoints = 1;
+        
+        assertFalse(player1.hasTradeTokenAgainst(player2), "Only 2 ahead is not enough");
+        
+        // Player1 has 3, Player2 has 0 - player1 is 3 ahead (enough!)
+        player2.commercePoints = 0;
+        
+        assertTrue(player1.hasTradeTokenAgainst(player2), "3 ahead should give advantage");
+    }
+
+    @Test
+    public void testPlacingCardThatGivesAdvantage() {
+        // Player1 starts with 2 CP
+        player1.commercePoints = 2;
+        player2.commercePoints = 0;
+        
+        assertFalse(player1.hasTradeTokenAgainst(player2), "Should not have advantage yet");
+        
+        // Place a ship that gives +1 CP, reaching 3 CP
         Card ship = new Card();
         ship.name = "Brick Ship";
         ship.type = "Unit – Trade Ship";
@@ -191,8 +168,43 @@ public class AdvantageTokenTest {
         ship.cost = "";
         ship.applyEffect(player1, player2, 1, 2);
         
-        assertEquals(3, player1.commercePoints);
-        assertEquals(1, player1.victoryPoints, "Should get +1 VP when reaching 3 point advantage");
-        assertTrue(player1.hasTradeTokenAgainst(player2), "Should have trade advantage at exactly 3 points");
+        assertEquals(3, player1.commercePoints, "Should have 3 CP now");
+        assertTrue(player1.hasTradeTokenAgainst(player2), "Should have trade advantage now");
+        assertEquals(1, player1.currentScoreAgainst(player2), "Should have 1 total VP (0 base + 1 advantage)");
+    }
+
+    @Test
+    public void testGetPointsSummaryShowsAdvantages() {
+        // Set up player with both advantages
+        player1.commercePoints = 4;
+        player1.strengthPoints = 5;
+        player1.victoryPoints = 2;
+        player2.commercePoints = 0;
+        player2.strengthPoints = 0;
+        
+        String summary = player1.getPointsSummary(player2);
+        
+        assertTrue(summary.contains("VP=2"), "Should show base VP");
+        assertTrue(summary.contains("Trade+1"), "Should show trade advantage");
+        assertTrue(summary.contains("Strength+1"), "Should show strength advantage");
+        assertTrue(summary.contains("Total: 4"), "Should show total including advantages");
+        assertTrue(summary.contains("CP=4"), "Should show CP");
+        assertTrue(summary.contains("FP=5"), "Should show FP");
+    }
+
+    @Test
+    public void testGetPointsSummaryWithoutAdvantages() {
+        player1.commercePoints = 1;
+        player1.strengthPoints = 1;
+        player1.victoryPoints = 3;
+        player2.commercePoints = 0;
+        player2.strengthPoints = 0;
+        
+        String summary = player1.getPointsSummary(player2);
+        
+        assertTrue(summary.contains("VP=3"), "Should show base VP");
+        assertFalse(summary.contains("Trade+1"), "Should not show trade advantage");
+        assertFalse(summary.contains("Strength+1"), "Should not show strength advantage");
+        assertFalse(summary.contains("Total:"), "Should not show total when same as base");
     }
 }

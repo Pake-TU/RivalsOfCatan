@@ -100,7 +100,7 @@ public class ExpansionCardEffectHandler {
     
     /**
      * Helper to add card stats to player when card is played/placed.
-     * Also checks for advantage tokens (trade/strength) and awards VP if gained.
+     * Checks for advantage token changes and notifies players.
      */
     private static void addCardStats(Card card, Player player, Player opponent) {
         int sp = CostParser.parseInt(card.SP, 0);
@@ -110,8 +110,10 @@ public class ExpansionCardEffectHandler {
         int kp = CostParser.parseInt(card.KP, 0);
         
         // Check advantage status BEFORE adding stats
-        boolean hadTradeAdvantage = player.hasTradeTokenAgainst(opponent);
-        boolean hadStrengthAdvantage = player.hasStrengthTokenAgainst(opponent);
+        boolean playerHadTradeAdvantage = player.hasTradeTokenAgainst(opponent);
+        boolean playerHadStrengthAdvantage = player.hasStrengthTokenAgainst(opponent);
+        boolean opponentHadTradeAdvantage = opponent.hasTradeTokenAgainst(player);
+        boolean opponentHadStrengthAdvantage = opponent.hasStrengthTokenAgainst(player);
         
         if (sp != 0) {
             player.skillPoints += sp;
@@ -129,17 +131,38 @@ public class ExpansionCardEffectHandler {
             player.victoryPoints += kp;
         }
         
-        // Check advantage status AFTER adding stats and award VP if newly gained
-        boolean hasTradeAdvantage = player.hasTradeTokenAgainst(opponent);
-        boolean hasStrengthAdvantage = player.hasStrengthTokenAgainst(opponent);
+        // Check advantage status AFTER adding stats and notify of changes
+        boolean playerHasTradeAdvantage = player.hasTradeTokenAgainst(opponent);
+        boolean playerHasStrengthAdvantage = player.hasStrengthTokenAgainst(opponent);
+        boolean opponentHasTradeAdvantage = opponent.hasTradeTokenAgainst(player);
+        boolean opponentHasStrengthAdvantage = opponent.hasStrengthTokenAgainst(player);
         
-        if (!hadTradeAdvantage && hasTradeAdvantage) {
-            player.victoryPoints += 1;
-            System.out.println("Trade advantage gained! +1 VP");
+        // Trade advantage changes
+        if (!playerHadTradeAdvantage && playerHasTradeAdvantage) {
+            player.sendMessage(">>> You gained the Trade Advantage! (CP: " + player.commercePoints + " vs " + opponent.commercePoints + ")");
+            opponent.sendMessage(">>> Opponent gained the Trade Advantage! (Their CP: " + player.commercePoints + " vs yours: " + opponent.commercePoints + ")");
+            if (opponentHadTradeAdvantage) {
+                opponent.sendMessage(">>> You lost the Trade Advantage!");
+            }
+        } else if (playerHadTradeAdvantage && !playerHasTradeAdvantage) {
+            player.sendMessage(">>> You lost the Trade Advantage!");
+            if (opponentHasTradeAdvantage) {
+                opponent.sendMessage(">>> You gained the Trade Advantage!");
+            }
         }
-        if (!hadStrengthAdvantage && hasStrengthAdvantage) {
-            player.victoryPoints += 1;
-            System.out.println("Strength advantage gained! +1 VP");
+        
+        // Strength advantage changes
+        if (!playerHadStrengthAdvantage && playerHasStrengthAdvantage) {
+            player.sendMessage(">>> You gained the Strength Advantage! (FP: " + player.strengthPoints + " vs " + opponent.strengthPoints + ")");
+            opponent.sendMessage(">>> Opponent gained the Strength Advantage! (Their FP: " + player.strengthPoints + " vs yours: " + opponent.strengthPoints + ")");
+            if (opponentHadStrengthAdvantage) {
+                opponent.sendMessage(">>> You lost the Strength Advantage!");
+            }
+        } else if (playerHadStrengthAdvantage && !playerHasStrengthAdvantage) {
+            player.sendMessage(">>> You lost the Strength Advantage!");
+            if (opponentHasStrengthAdvantage) {
+                opponent.sendMessage(">>> You gained the Strength Advantage!");
+            }
         }
     }
 }

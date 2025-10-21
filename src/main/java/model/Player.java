@@ -375,6 +375,47 @@ public class Player implements IPlayer {
             score += 1;
         return score;
     }
+    
+    /**
+     * Get a formatted string showing points including advantage tokens.
+     * @param opp The opponent player (needed to check advantage status)
+     * @return Formatted string showing all points and advantage tokens
+     */
+    public String getPointsSummary(Player opp) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\nPoints: ");
+        sb.append("VP=").append(victoryPoints);
+        
+        // Show advantage tokens
+        boolean hasTradeAdv = hasTradeTokenAgainst(opp);
+        boolean hasStrengthAdv = hasStrengthTokenAgainst(opp);
+        if (hasTradeAdv || hasStrengthAdv) {
+            sb.append(" [");
+            if (hasTradeAdv) {
+                sb.append("Trade+1");
+            }
+            if (hasTradeAdv && hasStrengthAdv) {
+                sb.append(", ");
+            }
+            if (hasStrengthAdv) {
+                sb.append("Strength+1");
+            }
+            sb.append("]");
+        }
+        
+        int totalScore = currentScoreAgainst(opp);
+        if (totalScore != victoryPoints) {
+            sb.append(" → Total: ").append(totalScore);
+        }
+        
+        sb.append("  CP=").append(commercePoints);
+        sb.append("  SP=").append(skillPoints);
+        sb.append("  FP=").append(strengthPoints);
+        sb.append("  PP=").append(progressPoints);
+        sb.append("\n");
+        
+        return sb.toString();
+    }
 
     private String firstWord(String s) {
         if (s == null)
