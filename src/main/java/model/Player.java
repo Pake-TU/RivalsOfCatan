@@ -1,7 +1,14 @@
 package model;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+
 import model.interfaces.IPlayer;
-import java.util.*;
 
 public class Player implements IPlayer {
     // --- “Public on purpose” for the exam ---
@@ -356,13 +363,13 @@ public class Player implements IPlayer {
         return t.toString();
     }
 
-    // Advantage tokens depend on being >= 3 ahead of the opponent.
+    // Advantage tokens depend on being >= 1 ahead of the opponent.
     public boolean hasTradeTokenAgainst(Player opp) {
-        return (this.commercePoints - (opp == null ? 0 : opp.commercePoints)) >= 3;
+        return (this.commercePoints - (opp == null ? 0 : opp.commercePoints)) >= 1;
     }
 
     public boolean hasStrengthTokenAgainst(Player opp) {
-        return (this.strengthPoints - (opp == null ? 0 : opp.strengthPoints)) >= 3;
+        return (this.strengthPoints - (opp == null ? 0 : opp.strengthPoints)) >= 1;
     }
 
     // Final score used for win check: base VP + 1 per advantage token against
@@ -375,9 +382,10 @@ public class Player implements IPlayer {
             score += 1;
         return score;
     }
-    
+
     /**
      * Get a formatted string showing points including advantage tokens.
+     * 
      * @param opp The opponent player (needed to check advantage status)
      * @return Formatted string showing all points and advantage tokens
      */
@@ -385,7 +393,7 @@ public class Player implements IPlayer {
         StringBuilder sb = new StringBuilder();
         sb.append("\nPoints: ");
         sb.append("VP=").append(victoryPoints);
-        
+
         // Show advantage tokens
         boolean hasTradeAdv = hasTradeTokenAgainst(opp);
         boolean hasStrengthAdv = hasStrengthTokenAgainst(opp);
@@ -402,18 +410,18 @@ public class Player implements IPlayer {
             }
             sb.append("]");
         }
-        
+
         int totalScore = currentScoreAgainst(opp);
         if (totalScore != victoryPoints) {
             sb.append(" → Total: ").append(totalScore);
         }
-        
+
         sb.append("  CP=").append(commercePoints);
         sb.append("  SP=").append(skillPoints);
         sb.append("  FP=").append(strengthPoints);
         sb.append("  PP=").append(progressPoints);
         sb.append("\n");
-        
+
         return sb.toString();
     }
 
@@ -537,12 +545,13 @@ public class Player implements IPlayer {
             sendMessage("No storage space on any " + regionName + " (already 3/3).");
         }
     }
-    
+
     /**
      * Prompts the player for a valid resource until they provide a correct one.
      * 
      * @param promptMessage The message to display when asking for input
-     * @return A validated resource type name (Brick, Grain, Lumber, Wool, Ore, or Gold)
+     * @return A validated resource type name (Brick, Grain, Lumber, Wool, Ore, or
+     *         Gold)
      */
     public String validateAndPromptResource(String promptMessage) {
         while (true) {
@@ -556,7 +565,8 @@ public class Player implements IPlayer {
                 // Valid resource type
                 return input.trim();
             }
-            sendMessage("Invalid resource '" + input + "'. Please enter one of: Brick, Grain, Lumber, Wool, Ore, or Gold.");
+            sendMessage(
+                    "Invalid resource '" + input + "'. Please enter one of: Brick, Grain, Lumber, Wool, Ore, or Gold.");
         }
     }
 
@@ -567,7 +577,7 @@ public class Player implements IPlayer {
     public boolean removeResource(String type, int n) {
         if (n <= 0)
             return true;
-        
+
         // Validate resource type
         String regionName = resourceToRegion(type);
         if (regionName == null || "Any".equals(regionName)) {
@@ -598,9 +608,10 @@ public class Player implements IPlayer {
         }
         return removed == n;
     }
-    
+
     /**
-     * Prompts the player to discard a resource with validation and retry on invalid input.
+     * Prompts the player to discard a resource with validation and retry on invalid
+     * input.
      * 
      * @param promptMessage The message to display when asking for input
      * @return The validated resource type that was discarded
@@ -614,12 +625,13 @@ public class Player implements IPlayer {
             }
             String trimmedInput = input.trim();
             String regionName = resourceToRegion(trimmedInput);
-            
+
             if (regionName == null || "Any".equals(regionName)) {
-                sendMessage("Invalid resource '" + input + "'. Please enter one of: Brick, Grain, Lumber, Wool, Ore, or Gold.");
+                sendMessage("Invalid resource '" + input
+                        + "'. Please enter one of: Brick, Grain, Lumber, Wool, Ore, or Gold.");
                 continue;
             }
-            
+
             // Try to remove the resource
             if (removeResource(trimmedInput, 1)) {
                 return trimmedInput;
@@ -717,43 +729,43 @@ public class Player implements IPlayer {
         sendMessage("PROMPT: Choose resource:");
         return receiveMessage();
     }
-    
+
     // ------------- IPlayer interface implementations (getters) -------------
     @Override
     public List<List<Card>> getPrincipality() {
         return principality;
     }
-    
+
     @Override
     public List<Card> getHand() {
         return hand;
     }
-    
+
     @Override
     public boolean isBot() {
         return isBot;
     }
-    
+
     @Override
     public int getVictoryPoints() {
         return victoryPoints;
     }
-    
+
     @Override
     public int getCommercePoints() {
         return commercePoints;
     }
-    
+
     @Override
     public int getStrengthPoints() {
         return strengthPoints;
     }
-    
+
     @Override
     public int getSkillPoints() {
         return skillPoints;
     }
-    
+
     @Override
     public int getProgressPoints() {
         return progressPoints;
