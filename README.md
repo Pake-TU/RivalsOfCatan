@@ -1,6 +1,17 @@
 # RivalsOfCatan
 This is for a school assignment
 
+## 📚 Documentation
+
+For a comprehensive understanding of the design and architecture:
+- **[DESIGN_REPORT.md](DESIGN_REPORT.md)** - Complete design analysis covering:
+  - SOLID Principles implementation
+  - Booch's Metrics (coupling, cohesion, complexity)
+  - Quality Attributes (modifiability, extensibility, testability)
+  - Design Patterns usage and rationale
+  - Module structure and communication flow
+  - Future extension guidelines
+
 ## Building and Running
 
 This project uses Maven for dependency management and building.
