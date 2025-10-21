@@ -487,6 +487,11 @@ public class Card implements Comparable<Card> {
                     active.flags.add("STOREHOUSE@" + row + "," + col);
                 } else if (nmEquals(nm, "Toll Bridge")) {
                     active.flags.add("TOLLB");
+                    // Toll Bridge also grants 1 Commerce Point when placed
+                    int cp = asInt(CP, 0);
+                    if (cp != 0) {
+                        active.commercePoints += cp;
+                    }
                 }
                 return true;
             }
