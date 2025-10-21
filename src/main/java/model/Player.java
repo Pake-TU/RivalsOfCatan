@@ -5,10 +5,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 
 import model.interfaces.IPlayer;
+import view.IPlayerView;
+import view.ConsolePlayerView;
+import view.BotPlayerView;
 
 public class Player implements IPlayer {
     // --- “Public on purpose” for the exam ---
@@ -37,9 +39,20 @@ public class Player implements IPlayer {
     // Last settlement (for Scout)
     public int lastSettlementRow = -1, lastSettlementCol = -1;
 
-    private final Scanner in = new Scanner(System.in);
+    // View abstraction for I/O (follows Dependency Inversion Principle)
+    private IPlayerView view;
 
     public Player() {
+        this(new ConsolePlayerView());
+    }
+    
+    /**
+     * Constructor with view injection (Dependency Inversion Principle).
+     * Allows different view implementations for console, bot, network, or testing.
+     * @param view The view implementation to use for I/O
+     */
+    public Player(IPlayerView view) {
+        this.view = view;
         String[] all = { "Brick", "Grain", "Lumber", "Wool", "Ore", "Gold", "Any" };
         principality = new java.util.ArrayList<>();
         // Start with a 5×5 empty grid (grows as needed)
@@ -55,23 +68,29 @@ public class Player implements IPlayer {
             resources.put(r, 0);
     }
 
-    // ------------- I/O (console) -------------
+    // ------------- I/O (delegated to view) -------------
     public void sendMessage(Object m) {
-        if (!isBot) {
-            System.out.println(m);
+        // Check if bot flag is set and view needs updating
+        if (isBot && !(view instanceof BotPlayerView)) {
+            view = new BotPlayerView();
         }
+        view.sendMessage(String.valueOf(m));
     }
 
     public String receiveMessage() {
-        if (isBot) {
-            // Bot auto-response: simple default choices
-            // Note: This is a simplistic implementation that always returns "1".
-            // For a more sophisticated bot, implement context-aware responses
-            // based on game state and available options.
-            return "1"; // Default choice for most prompts
+        // Check if bot flag is set and view needs updating
+        if (isBot && !(view instanceof BotPlayerView)) {
+            view = new BotPlayerView();
         }
-        System.out.print("> ");
-        return in.nextLine();
+        return view.receiveMessage();
+    }
+    
+    /**
+     * Set the view for this player (supports changing I/O mode).
+     * @param view The new view implementation
+     */
+    public void setView(IPlayerView view) {
+        this.view = view;
     }
 
     // ------------- Grid helpers -------------

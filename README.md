@@ -43,60 +43,108 @@ The project follows Maven standard directory layout with a well-organized packag
 
 ```
 src/main/java/
-├── model/                              // Game domain and entities
-│   ├── Card.java                       // Card data and effects
-│   ├── Player.java                     // Player state and resource management
-│   ├── ResourceType.java               // Resource type constants and mappings
-│   ├── EventType.java                  // Event die face constants
+├── view/                                // View layer (MVC)
+│   ├── IPlayerView.java                 // View interface for player I/O
+│   ├── ConsolePlayerView.java           // Console-based view implementation
+│   ├── BotPlayerView.java               // Bot player view (no I/O)
+│   └── NetworkPlayerView.java           // Network-based view implementation
+│
+├── model/                               // Model layer - Game domain and entities
+│   ├── Card.java                        // Card data and effects
+│   ├── Player.java                      // Player state and resource management
+│   ├── ResourceType.java                // Resource type constants and mappings
+│   ├── EventType.java                   // Event die face constants
+│   ├── CardDeckManager.java             // Card deck management
+│   ├── effects/                         // Card effect handlers
+│   │   ├── ActionCardEffectHandler.java
+│   │   ├── CenterCardEffectHandler.java
+│   │   ├── ExpansionCardEffectHandler.java
+│   │   └── RegionPlacementHelper.java
 │   └── interfaces/
-│       ├── IPlayer.java                // Player abstraction for different types
-│       └── ICardEffect.java            // Interface for card effects
+│       ├── IPlayer.java                 // Player abstraction for different types
+│       └── ICardEffect.java             // Interface for card effects
 │
-├── controller/                         // Game logic managers
-│   ├── ProductionManager.java          // Handles production phase
-│   ├── ReplenishManager.java           // Manages hand replenishment
-│   ├── ExchangeManager.java            // Handles card exchange phase
-│   ├── InitializationManager.java      // Sets up initial game state
+├── controller/                          // Controller layer - Game logic managers
+│   ├── GameController.java              // Main game loop controller
+│   ├── ProductionManager.java           // Handles production phase
+│   ├── ReplenishManager.java            // Manages hand replenishment
+│   ├── ExchangeManager.java             // Handles card exchange phase
+│   ├── InitializationManager.java       // Sets up initial game state
+│   ├── ActionManager.java               // Manages action phase
+│   ├── EventResolver.java               // Resolves event die outcomes
+│   ├── events/                          // Event card implementations
 │   └── interfaces/
-│       └── IGameManager.java           // Base interface for all managers
+│       └── IGameManager.java            // Base interface for all managers
 │
-├── network/                            // Networking and multiplayer
-│   └── OnlinePlayer.java               // Network-enabled player
+├── network/                             // Networking and multiplayer
+│   └── OnlinePlayer.java                // Network-enabled player
 │
-├── util/                               // Reusable utilities
-│   ├── DiceRoller.java                 // Dice rolling logic
-│   └── CostParser.java                 // Cost parsing utilities
+├── util/                                // Reusable utilities
+│   ├── DiceRoller.java                  // Dice rolling logic
+│   ├── CostParser.java                  // Cost parsing utilities
+│   ├── CardLoader.java                  // Card loading from JSON
+│   └── PlacementValidator.java          // Card placement validation
 │
-├── Main.java                           // Application entry point and client connection
-└── Server.java                         // Game coordinator and server logic
+├── Main.java                            // Application entry point
+└── Server.java                          // Server setup and player initialization
 
 src/main/resources/
-└── cards.json                          // Card definitions
+└── cards.json                           // Card definitions
 
 src/test/java/
-└── (Test files to be added)
+└── (Test files)
 ```
 
 ## Architecture
 
-The project follows **SOLID principles** and **MVC architecture**:
+The project follows **MVC architecture** and **SOLID principles**:
 
-- **Model**: Game entities (Card, Player, ResourceType, EventType)
-- **Controller**: Game phase managers implementing specific logic
-- **View**: Console-based I/O through Player classes
-- **Interfaces**: Clear contracts for extensibility and testability
+### MVC Pattern
+- **Model**: Game entities (Card, Player, ResourceType, EventType) - Pure data and business logic
+- **View**: I/O abstraction (IPlayerView and implementations) - Handles all user interaction
+- **Controller**: Game flow managers (GameController, phase managers) - Coordinates game logic
+
+### SOLID Principles Applied
+
+1. **Single Responsibility Principle (SRP)**
+   - Each class has one clear responsibility
+   - View classes handle only I/O
+   - GameController handles only game loop
+   - Each manager handles one game phase
+
+2. **Open/Closed Principle (OCP)**
+   - New view types can be added without modifying Player
+   - New game phases can be added as new managers
+   - Resource types can be extended in ResourceType class
+
+3. **Liskov Substitution Principle (LSP)**
+   - All IPlayerView implementations are interchangeable
+   - OnlinePlayer extends Player without breaking expectations
+   - Bot players can substitute for regular players seamlessly
+
+4. **Interface Segregation Principle (ISP)**
+   - IPlayerView provides minimal interface for I/O
+   - IGameManager provides minimal interface for phase managers
+   - No unnecessary dependencies between components
+
+5. **Dependency Inversion Principle (DIP)**
+   - Player depends on IPlayerView interface, not concrete Scanner
+   - GameController depends on manager abstractions
+   - High-level modules don't depend on low-level details
 
 ### Key Interfaces
 
+- **IPlayerView**: Abstraction for player I/O (console, network, bot)
 - **IPlayer**: Abstraction for different player types (local, online, bot)
 - **IGameManager**: Base for all game phase managers
 - **ICardEffect**: Extensible card behavior system
 
 ### Design Patterns
 
-- **Strategy Pattern**: Different player types implementing IPlayer
+- **Strategy Pattern**: Different player view implementations (Console, Network, Bot)
 - **Manager Pattern**: Separate managers for each game phase
 - **Factory Pattern**: Card creation and initialization
+- **Dependency Injection**: Views injected into Player constructor
 
 ## Features
 
@@ -110,6 +158,13 @@ The project follows **SOLID principles** and **MVC architecture**:
 - New game phases can be added as new managers
 - Card effects can be extended through ICardEffect interface
 - Prepared for future eras and expansions
+- New view types (GUI, web) can be added without changing model
+
+### Testability
+- View layer can be mocked for testing
+- Player logic testable without I/O
+- Managers can be tested independently
+- Clear separation of concerns enables unit testing
 
 ### Build System
 - Maven handles all dependencies
