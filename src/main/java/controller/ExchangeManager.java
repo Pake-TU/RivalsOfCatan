@@ -34,11 +34,13 @@ public class ExchangeManager implements IGameManager {
 
         p.sendMessage("PROMPT: Enter card name to put under a stack:");
         String nm = p.receiveMessage();
-        Card chosen = p.removeFromHandByName(nm);
+        Card chosen = findCardInHand(p, nm);
         if (chosen == null) {
             p.sendMessage("Not in hand.");
             return;
         }
+        // Remove the card from hand
+        p.hand.remove(chosen);
 
         p.sendMessage("PROMPT: Choose stack [1-4] to put it under:");
         int st = CostParser.parseInt(p.receiveMessage(), 1);
@@ -99,5 +101,39 @@ public class ExchangeManager implements IGameManager {
                 return Card.drawStack4;
         }
         return Card.drawStack1;
+    }
+
+    /**
+     * Find a card in the player's hand by numeric index or name.
+     * Similar to ActionManager.findCardInHand.
+     * @param p The player
+     * @param spec The card specification (numeric index or card name)
+     * @return The card if found, null otherwise
+     */
+    private Card findCardInHand(Player p, String spec) {
+        if (spec == null)
+            return null;
+        spec = spec.trim();
+
+        // Numeric index?
+        try {
+            int idx = Integer.parseInt(spec);
+            if (idx >= 0 && idx < p.hand.size())
+                return p.hand.get(idx);
+        } catch (NumberFormatException ignored) {
+        }
+
+        // Exact name match
+        for (Card c : p.hand) {
+            if (c != null && c.name != null && c.name.equalsIgnoreCase(spec))
+                return c;
+        }
+        // Prefix fallback
+        String lower = spec.toLowerCase();
+        for (Card c : p.hand) {
+            if (c != null && c.name != null && c.name.toLowerCase().startsWith(lower))
+                return c;
+        }
+        return null;
     }
 }
