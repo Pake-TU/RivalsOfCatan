@@ -149,6 +149,9 @@ public class ExpansionCardEffectHandler {
             if (opponentHasTradeAdvantage) {
                 opponent.sendMessage(">>> You gained the Trade Advantage!");
             }
+        } else if (opponentHadTradeAdvantage && !opponentHasTradeAdvantage) {
+            // Opponent lost advantage without player gaining it (e.g., player caught up to tie)
+            opponent.sendMessage(">>> You lost the Trade Advantage!");
         }
         
         // Strength advantage changes
@@ -163,6 +166,9 @@ public class ExpansionCardEffectHandler {
             if (opponentHasStrengthAdvantage) {
                 opponent.sendMessage(">>> You gained the Strength Advantage!");
             }
+        } else if (opponentHadStrengthAdvantage && !opponentHasStrengthAdvantage) {
+            // Opponent lost advantage without player gaining it (e.g., player caught up to tie)
+            opponent.sendMessage(">>> You lost the Strength Advantage!");
         }
     }
 }
