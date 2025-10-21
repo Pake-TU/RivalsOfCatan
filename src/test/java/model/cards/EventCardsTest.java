@@ -75,15 +75,15 @@ public class EventCardsTest {
         settlement.type = "Settlement";
         player1.placeCard(2, 2, settlement);
 
-        // Place region adjacent to settlement
+        // Place region in inner ring
         Card region = new Card();
-        region.name = "Fields";
+        region.name = "Field";
         region.type = "Region";
         region.diceRoll = 3;
         region.regionProduction = 0;
-        player1.placeCard(1, 2, region);
+        player1.placeCard(1, 1, region);
 
-        // Place Abbey above settlement (row 1, col 2), adjacent to region
+        // Place Abbey above settlement (row 1, col 2), adjacent to region at (1, 1)
         Card abbey = new Card();
         abbey.name = "Abbey";
         abbey.type = "Building";
@@ -93,9 +93,9 @@ public class EventCardsTest {
 
         // Year of Plenty gives regions 1 resource for each adjacent Storehouse/Abbey
         // Since we can't test interactive input, we verify the setup is correct
-        assertNotNull(player1.getCard(1, 3), "Abbey should be placed");
-        assertEquals("Abbey", player1.getCard(1, 3).name, "Card should be Abbey");
-        assertEquals(0, region.regionProduction, "Region starts with 0 resources");
+        assertNotNull(player1.getCard(1, 2), "Abbey should be placed");
+        assertEquals("Abbey", player1.getCard(1, 2).name, "Card should be Abbey");
+        assertEquals(1, player1.progressPoints, "Abbey should give 1 PP");
     }
 
     @Test
