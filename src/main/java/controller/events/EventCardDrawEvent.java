@@ -33,18 +33,25 @@ public class EventCardDrawEvent implements IEventHandler {
         
         if (nm.equalsIgnoreCase("feud")) {
             feudEvent.resolve(players, active, other);
+            Card.events.add(top); // Return card to bottom of pile
         } else if (nm.equalsIgnoreCase("fraternal feuds")) {
             fraternalFeudsEvent.resolve(players, active, other);
+            Card.events.add(top); // Return card to bottom of pile
         } else if (nm.equalsIgnoreCase("invention")) {
             inventionEvent.resolve(players, active, other);
+            Card.events.add(top); // Return card to bottom of pile
         } else if (nm.equalsIgnoreCase("trade ships race")) {
             tradeShipsRaceEvent.resolve(players, active, other);
+            Card.events.add(top); // Return card to bottom of pile
         } else if (nm.equalsIgnoreCase("traveling merchant")) {
             travelingMerchantEvent.resolve(players, active, other);
+            Card.events.add(top); // Return card to bottom of pile
         } else if (nm.equalsIgnoreCase("year of plenty")) {
             yearOfPlentyEvent.resolve(players, active, other);
+            Card.events.add(top); // Return card to bottom of pile
         } else if (nm.equalsIgnoreCase("yule")) {
             // Shuffle the event deck and immediately draw again
+            Card.events.add(top); // Return Yule card before shuffling
             java.util.Collections.shuffle(Card.events);
             handleEvent(players, active, other); // recurse one more draw
         }
