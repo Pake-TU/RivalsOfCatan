@@ -31,6 +31,9 @@ public class InitializationManager implements IGameManager {
             p.placeCard(center, 1, Card.popCardByName(Card.settlements, "Settlement"));
             p.placeCard(center, 2, Card.popCardByName(Card.roads, "Road"));
             p.placeCard(center, 3, Card.popCardByName(Card.settlements, "Settlement"));
+            
+            // Players start with 2 settlements, so they start with 2 VP
+            p.victoryPoints = 2;
 
             // Regions in rows 1 and 3 (above/below)
             Card forest = Card.popCardByName(Card.regions, "Forest");
