@@ -110,4 +110,90 @@ public class CenterCardEffectHandlerTest {
         assertNotNull(cardAtPosition, "Card should still exist at position (2,2)");
         assertEquals("Road", cardAtPosition.name, "Card should still be Road");
     }
+
+    @Test
+    public void testRoadRequiresAdjacentSettlementOrCity() {
+        // Try to place a Road without any adjacent Settlement or City
+        Card road = new Card();
+        road.name = "Road";
+        road.type = "Road";
+        
+        boolean roadPlaced = road.applyEffect(player1, player2, 2, 2);
+        assertFalse(roadPlaced, "Road should not be placed without adjacent Settlement or City");
+        
+        // Verify no road was placed
+        Card cardAtPosition = player1.getCard(2, 2);
+        assertNull(cardAtPosition, "No card should be at position (2,2)");
+    }
+
+    @Test
+    public void testRoadCanBePlacedNextToSettlement() {
+        // Place a Settlement first
+        Card settlement = new Card();
+        settlement.name = "Settlement";
+        settlement.type = "Settlement";
+        player1.placeCard(2, 2, settlement);
+        
+        // Now place a Road next to the Settlement (on the right)
+        Card road = new Card();
+        road.name = "Road";
+        road.type = "Road";
+        
+        boolean roadPlaced = road.applyEffect(player1, player2, 2, 3);
+        assertTrue(roadPlaced, "Road should be placed next to Settlement");
+        
+        // Verify road was placed
+        Card cardAtPosition = player1.getCard(2, 3);
+        assertNotNull(cardAtPosition, "Card should exist at position (2,3)");
+        assertEquals("Road", cardAtPosition.name, "Card should be Road");
+    }
+
+    @Test
+    public void testRoadCanBePlacedNextToCity() {
+        // Place a City first
+        Card city = new Card();
+        city.name = "City";
+        city.type = "City";
+        player1.placeCard(2, 2, city);
+        
+        // Now place a Road next to the City (on the left)
+        Card road = new Card();
+        road.name = "Road";
+        road.type = "Road";
+        
+        boolean roadPlaced = road.applyEffect(player1, player2, 2, 1);
+        assertTrue(roadPlaced, "Road should be placed next to City");
+        
+        // Verify road was placed
+        Card cardAtPosition = player1.getCard(2, 1);
+        assertNotNull(cardAtPosition, "Card should exist at position (2,1)");
+        assertEquals("Road", cardAtPosition.name, "Card should be Road");
+    }
+
+    @Test
+    public void testRoadCannotBePlacedNextToAnotherRoad() {
+        // Place a Settlement first
+        Card settlement = new Card();
+        settlement.name = "Settlement";
+        settlement.type = "Settlement";
+        player1.placeCard(2, 2, settlement);
+        
+        // Place a Road next to the Settlement
+        Card road1 = new Card();
+        road1.name = "Road";
+        road1.type = "Road";
+        boolean road1Placed = road1.applyEffect(player1, player2, 2, 3);
+        assertTrue(road1Placed, "First road should be placed");
+        
+        // Try to place another Road next to the first Road
+        Card road2 = new Card();
+        road2.name = "Road";
+        road2.type = "Road";
+        boolean road2Placed = road2.applyEffect(player1, player2, 2, 4);
+        assertFalse(road2Placed, "Second road should not be placed next to another Road");
+        
+        // Verify second road was not placed
+        Card cardAtPosition = player1.getCard(2, 4);
+        assertNull(cardAtPosition, "No card should be at position (2,4)");
+    }
 }

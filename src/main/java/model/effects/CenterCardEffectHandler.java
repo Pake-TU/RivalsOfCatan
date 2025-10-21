@@ -39,14 +39,24 @@ public class CenterCardEffectHandler {
     }
     
     private static boolean applyRoadEffect(Card card, Player active, int row, int col) {
-        // Roads cannot be placed next to other roads (left or right)
         Card left = active.getCard(row, col - 1);
         Card right = active.getCard(row, col + 1);
+        
+        // Roads cannot be placed next to other roads (left or right)
         boolean hasLeftRoad = (left != null && left.name != null && left.name.equalsIgnoreCase("Road"));
         boolean hasRightRoad = (right != null && right.name != null && right.name.equalsIgnoreCase("Road"));
         
         if (hasLeftRoad || hasRightRoad) {
             active.sendMessage("Road cannot be placed next to another Road. Roads must be separated by Settlements or Cities.");
+            return false;
+        }
+        
+        // Roads must be placed adjacent to a Settlement or City (left or right)
+        boolean hasAdjacentSettlementOrCity = PlacementValidator.isSettlementOrCity(left)
+                || PlacementValidator.isSettlementOrCity(right);
+        
+        if (!hasAdjacentSettlementOrCity) {
+            active.sendMessage("Road must be placed next to a Settlement or City.");
             return false;
         }
         
