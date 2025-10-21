@@ -69,13 +69,15 @@ public class Main {
         int current = Math.random() < 0.5 ? 0 : 1; // random start
         // print the players principality and hand
         for (int i = 0; i < players.size(); i++) {
-            players.get(i).sendMessage("Opponent's starting board:");
-            players.get(i).sendMessage(
-                    "\t\t" + players.get((i + 1) % players.size()).printPrincipality().replace("\n", "\n\t\t"));
-            players.get(i).sendMessage("Your starting board:");
-            players.get(i).sendMessage(players.get(i).printPrincipality());
-            players.get(i).sendMessage("Your starting hand:");
-            players.get(i).sendMessage(players.get(i).printHand());
+            Player currentPlayer = players.get(i);
+            Player opponentPlayer = players.get((i + 1) % players.size());
+            currentPlayer.sendMessage("Opponent's starting board:");
+            currentPlayer.sendMessage(
+                    "\t\t" + opponentPlayer.printPrincipality(currentPlayer).replace("\n", "\n\t\t"));
+            currentPlayer.sendMessage("Your starting board:");
+            currentPlayer.sendMessage(currentPlayer.printPrincipality(opponentPlayer));
+            currentPlayer.sendMessage("Your starting hand:");
+            currentPlayer.sendMessage(currentPlayer.printHand());
         }
         while (true) {
             Player active = players.get(current);
@@ -95,13 +97,15 @@ public class Main {
 
             // print the players principality and hand
             for (int i = 0; i < players.size(); i++) {
-                players.get(i).sendMessage("Opponent's board:");
-                players.get(i).sendMessage(
-                        "\t\t" + players.get((i + 1) % players.size()).printPrincipality().replace("\n", "\n\t\t"));
-                players.get(i).sendMessage("Your board:");
-                players.get(i).sendMessage(players.get(i).printPrincipality());
-                players.get(i).sendMessage("Your hand:");
-                players.get(i).sendMessage(players.get(i).printHand());
+                Player currentPlayer = players.get(i);
+                Player opponentPlayer = players.get((i + 1) % players.size());
+                currentPlayer.sendMessage("Opponent's board:");
+                currentPlayer.sendMessage(
+                        "\t\t" + opponentPlayer.printPrincipality(currentPlayer).replace("\n", "\n\t\t"));
+                currentPlayer.sendMessage("Your board:");
+                currentPlayer.sendMessage(currentPlayer.printPrincipality(opponentPlayer));
+                currentPlayer.sendMessage("Your hand:");
+                currentPlayer.sendMessage(currentPlayer.printHand());
             }
 
             // -------- Part 2: Action Phase (very small) --------
