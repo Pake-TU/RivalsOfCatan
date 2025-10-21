@@ -2,6 +2,7 @@ package model.effects;
 
 import model.Card;
 import model.Player;
+import model.ResourceType;
 
 /**
  * Helper class for placing regions when a new settlement is built.
@@ -88,6 +89,7 @@ public class RegionPlacementHelper {
     
     /**
      * Helper: choose region by name or index from Card.regions
+     * Accepts region name (e.g., "Forest"), resource type (e.g., "Lumber"), or index
      */
     private static Card pickRegionFromStackByNameOrIndex(String spec) {
         if (spec == null || spec.isBlank()) {
@@ -107,6 +109,16 @@ public class RegionPlacementHelper {
             Card c = Card.regions.get(i);
             if (c != null && c.name != null && c.name.equalsIgnoreCase(spec)) {
                 return Card.regions.remove(i);
+            }
+        }
+        // try by resource type (e.g., "Lumber" for "Forest", "Brick" for "Hill")
+        String regionName = ResourceType.resourceToRegion(spec);
+        if (regionName != null && !"Any".equals(regionName)) {
+            for (int i = 0; i < Card.regions.size(); i++) {
+                Card c = Card.regions.get(i);
+                if (c != null && c.name != null && c.name.equalsIgnoreCase(regionName)) {
+                    return Card.regions.remove(i);
+                }
             }
         }
         return null;

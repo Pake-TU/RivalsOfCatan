@@ -23,6 +23,15 @@ public class ActionCardEffectHandler {
         }
         
         if (name.equalsIgnoreCase("Scout")) {
+            // Scout requires the player to be able to afford a settlement
+            // Check if player has enough resources (BGLW = Brick, Grain, Lumber, Wool)
+            if (active.getResourceCount("Brick") < 1 || 
+                active.getResourceCount("Grain") < 1 ||
+                active.getResourceCount("Lumber") < 1 ||
+                active.getResourceCount("Wool") < 1) {
+                active.sendMessage("Scout can only be played if you can afford a Settlement (Brick, Grain, Lumber, Wool).");
+                return false;
+            }
             // Only meaningful when used with a new settlement (Server stores lastSettlementRow/Col)
             active.flags.add("SCOUT_NEXT_SETTLEMENT");
             return true;
