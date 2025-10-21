@@ -1,73 +1,117 @@
 # RivalsOfCatan
 This is for a school assignment
 
-# Folder structure
-This structure was discussed with a classmate, Simon Pergel, and we agreed that this structure looks good.
+## Building and Running
+
+This project uses Maven for dependency management and building.
+
+### Prerequisites
+- Java 11 or higher
+- Maven 3.6 or higher
+
+### Building the Project
+```bash
+# Compile the project
+mvn clean compile
+
+# Package into a JAR file
+mvn package
+
+# Run tests (when available)
+mvn test
+```
+
+### Running the Game
+```bash
+# Run with bot player (default)
+java -cp target/classes:target/dependency/* Main bot
+
+# Run with online multiplayer (2 players)
+# Terminal 1 (server):
+java -cp target/classes:target/dependency/* Main
+
+# Terminal 2 (client):
+java -cp target/classes:target/dependency/* Main online
+
+# Or use the fat JAR:
+java -jar target/rivals-of-catan-1.0.0-SNAPSHOT-with-dependencies.jar bot
+```
+
+## Folder Structure
+
+The project follows Maven standard directory layout with a well-organized package structure:
 
 ```
-src/
-├── model/                              // Handles game domain and its entities, players hand etc
-│   ├── Card.java
-│   ├── Deck.java
-│   ├── Player.java
-│   ├── Principality.java
-│   ├── Resource.java
-│   ├── EventCard.java
-│   ├── BasicCard.java
-│   ├── CenterCard.java
-│   └── VictoryPointTracker.java
-│
-├── controller/                         // Handles the turns, events, validating rules, contains interfaces
-│   ├── GameController.java
-│   ├── TurnManager.java
-│   ├── DeckManager.java
-│   ├── EventManager.java
-│   ├── CardFactory.java
-│   ├── RuleValidator.java
-│   ├── interfaces/
-│   │   ├── IGameController.java
-│   │   ├── IDeckProvider.java
-│   │   ├── IEventHandler.java
-│   │   └── IRuleValidator.java
-│   │
-│   └── actions/
-│       ├── CardEffect.java             // Interface for all effects
-|       ├── BrigandEffect.java          // Implements Brigand attack behavior
-|       ├── TradeEffect.java            // Implements trade behavior
-|       ├── CelebrationEffect.java      // Implements celebration behavior
-|       ├── HarvestEffect.java          // Implements harvest behavior
-|       └── EventCardEffect.java        // Base for event-card-driven effects
-│
-├── network/                            // Handles creating a server, connecting to a server etc
-│   ├── Server.java                     // Logic for creating the server, listening to a port and inject connected 
-|   |                                   // players to the GameController
-│   ├── ServerHandler.java              // Manages connected players, forward messages handles disconnects etc.
-│   ├── ClientConnection.java           // Handles the connection between server and player
-│   ├── OnlinePlayer.java               // Player logic of an online player, converts CLI -> network msg -> gameplay action
-│   ├── NetworkService.java             
+src/main/java/
+├── model/                              // Game domain and entities
+│   ├── Card.java                       // Card data and effects
+│   ├── Player.java                     // Player state and resource management
+│   ├── ResourceType.java               // Resource type constants and mappings
+│   ├── EventType.java                  // Event die face constants
 │   └── interfaces/
-│       ├── INetworkHandler.java
-│       ├── IConnection.java
-│       └── IMessageProtocol.java
+│       ├── IPlayer.java                // Player abstraction for different types
+│       └── ICardEffect.java            // Interface for card effects
 │
-├── io/
-│   ├── interfaces/
-│   │   ├── IPlayerIO.java              // Generic input/output abstraction
-│   │   ├── IInputService.java
-│   │   └── IOutputService.java
-│   │
-│   ├── ConsoleInput.java
-│   ├── ConsoleOutput.java
-│   ├── SocketInput.java
-│   ├── SocketOutput.java
-│   └── MockIO.java                     // For JUnit testing
+├── controller/                         // Game logic managers
+│   ├── ProductionManager.java          // Handles production phase
+│   ├── ReplenishManager.java           // Manages hand replenishment
+│   ├── ExchangeManager.java            // Handles card exchange phase
+│   ├── InitializationManager.java      // Sets up initial game state
+│   └── interfaces/
+│       └── IGameManager.java           // Base interface for all managers
 │
-├── util/
-│   ├── Dice.java
-│   ├── Logger.java
-│   ├── Randomizer.java
-│   └── GameConfig.java
-|
-└── tests/
-    └── To be added
+├── network/                            // Networking and multiplayer
+│   └── OnlinePlayer.java               // Network-enabled player
+│
+├── util/                               // Reusable utilities
+│   ├── DiceRoller.java                 // Dice rolling logic
+│   └── CostParser.java                 // Cost parsing utilities
+│
+├── Main.java                           // Application entry point and client connection
+└── Server.java                         // Game coordinator and server logic
+
+src/main/resources/
+└── cards.json                          // Card definitions
+
+src/test/java/
+└── (Test files to be added)
 ```
+
+## Architecture
+
+The project follows **SOLID principles** and **MVC architecture**:
+
+- **Model**: Game entities (Card, Player, ResourceType, EventType)
+- **Controller**: Game phase managers implementing specific logic
+- **View**: Console-based I/O through Player classes
+- **Interfaces**: Clear contracts for extensibility and testability
+
+### Key Interfaces
+
+- **IPlayer**: Abstraction for different player types (local, online, bot)
+- **IGameManager**: Base for all game phase managers
+- **ICardEffect**: Extensible card behavior system
+
+### Design Patterns
+
+- **Strategy Pattern**: Different player types implementing IPlayer
+- **Manager Pattern**: Separate managers for each game phase
+- **Factory Pattern**: Card creation and initialization
+
+## Features
+
+### Resource Validation
+- All resource inputs are validated with retry on invalid entry
+- Players must enter full resource names (Brick, Grain, Lumber, Wool, Ore, Gold)
+- No more silent ignoring of invalid inputs
+
+### Extensibility
+- Interfaces allow for easy addition of new player types
+- New game phases can be added as new managers
+- Card effects can be extended through ICardEffect interface
+- Prepared for future eras and expansions
+
+### Build System
+- Maven handles all dependencies
+- Single command to build and package
+- Fat JAR includes all dependencies for easy distribution

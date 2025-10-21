@@ -1,6 +1,16 @@
-import java.util.*;
+package model;
 
-public class Player {
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+
+import model.interfaces.IPlayer;
+
+public class Player implements IPlayer {
     // --- “Public on purpose” for the exam ---
     public int victoryPoints = 0;
     public int progressPoints = 0;
@@ -47,10 +57,19 @@ public class Player {
 
     // ------------- I/O (console) -------------
     public void sendMessage(Object m) {
-        System.out.println(m);
+        if (!isBot) {
+            System.out.println(m);
+        }
     }
 
     public String receiveMessage() {
+        if (isBot) {
+            // Bot auto-response: simple default choices
+            // Note: This is a simplistic implementation that always returns "1".
+            // For a more sophisticated bot, implement context-aware responses
+            // based on game state and available options.
+            return "1"; // Default choice for most prompts
+        }
         System.out.print("> ");
         return in.nextLine();
     }
@@ -119,7 +138,7 @@ public class Player {
     }
 
     // Nicely prints the principality with coordinates, plus hand & point summary.
-    public String printPrincipality() {
+    public String printPrincipality(Player opponent) {
         StringBuilder sb = new StringBuilder();
         int rows = principality.size();
         int cols = principality.isEmpty() ? 0 : principality.get(0).size();
@@ -174,14 +193,18 @@ public class Player {
             sb.append("    ").append(buildSep(w)).append("\n");
         }
 
-        // Points line
-        sb.append("\nPoints: ")
-                .append("VP=").append(victoryPoints)
-                .append("  CP=").append(commercePoints)
-                .append("  SP=").append(skillPoints)
-                .append("  FP=").append(strengthPoints)
-                .append("  PP=").append(progressPoints)
-                .append("\n");
+        // Points line - use getPointsSummary to include advantages
+        sb.append(getPointsSummary(opponent));
+
+        // Resources banner - show current available resources
+        sb.append("\nResources: ");
+        sb.append("Brick=").append(getResourceCount("Brick")).append("  ");
+        sb.append("Grain=").append(getResourceCount("Grain")).append("  ");
+        sb.append("Lumber=").append(getResourceCount("Lumber")).append("  ");
+        sb.append("Wool=").append(getResourceCount("Wool")).append("  ");
+        sb.append("Ore=").append(getResourceCount("Ore")).append("  ");
+        sb.append("Gold=").append(getResourceCount("Gold"));
+        sb.append("\n");
 
         return sb.toString();
     }
@@ -334,13 +357,15 @@ public class Player {
         return t.toString();
     }
 
-    // Advantage tokens depend on being >= 3 ahead of the opponent.
+    // Advantage tokens require having 3+ points AND at least 1 more than the opponent.
     public boolean hasTradeTokenAgainst(Player opp) {
-        return (this.commercePoints - (opp == null ? 0 : opp.commercePoints)) >= 3;
+        int oppCP = (opp == null ? 0 : opp.commercePoints);
+        return this.commercePoints >= 3 && this.commercePoints > oppCP;
     }
 
     public boolean hasStrengthTokenAgainst(Player opp) {
-        return (this.strengthPoints - (opp == null ? 0 : opp.strengthPoints)) >= 3;
+        int oppFP = (opp == null ? 0 : opp.strengthPoints);
+        return this.strengthPoints >= 3 && this.strengthPoints > oppFP;
     }
 
     // Final score used for win check: base VP + 1 per advantage token against
@@ -352,6 +377,48 @@ public class Player {
         if (hasStrengthTokenAgainst(opp))
             score += 1;
         return score;
+    }
+
+    /**
+     * Get a formatted string showing points including advantage tokens.
+     * 
+     * @param opp The opponent player (needed to check advantage status)
+     * @return Formatted string showing all points and advantage tokens
+     */
+    public String getPointsSummary(Player opp) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\nPoints: ");
+        sb.append("VP=").append(victoryPoints);
+
+        // Show advantage tokens
+        boolean hasTradeAdv = hasTradeTokenAgainst(opp);
+        boolean hasStrengthAdv = hasStrengthTokenAgainst(opp);
+        if (hasTradeAdv || hasStrengthAdv) {
+            sb.append(" [");
+            if (hasTradeAdv) {
+                sb.append("Trade+1");
+            }
+            if (hasTradeAdv && hasStrengthAdv) {
+                sb.append(", ");
+            }
+            if (hasStrengthAdv) {
+                sb.append("Strength+1");
+            }
+            sb.append("]");
+        }
+
+        int totalScore = currentScoreAgainst(opp);
+        if (totalScore != victoryPoints) {
+            sb.append(" → Total: ").append(totalScore);
+        }
+
+        sb.append("  CP=").append(commercePoints);
+        sb.append("  SP=").append(skillPoints);
+        sb.append("  FP=").append(strengthPoints);
+        sb.append("  PP=").append(progressPoints);
+        sb.append("\n");
+
+        return sb.toString();
     }
 
     private String firstWord(String s) {
@@ -375,27 +442,7 @@ public class Player {
 
     // Map a resource name to its Region card name
     private String resourceToRegion(String type) {
-        if (type == null)
-            return null;
-        String t = type.trim().toLowerCase();
-        switch (t) {
-            case "brick":
-                return "Hill";
-            case "grain":
-                return "Field";
-            case "lumber":
-                return "Forest";
-            case "wool":
-                return "Pasture";
-            case "ore":
-                return "Mountain";
-            case "gold":
-                return "Gold Field";
-            case "any":
-                return "Any";
-            default:
-                return null;
-        }
+        return ResourceType.resourceToRegion(type);
     }
 
     // Collect all Region cards of a given region-name (e.g., "Forest")
@@ -457,15 +504,18 @@ public class Player {
     public void gainResource(String type) {
         String t = type;
         if (t == null || t.equalsIgnoreCase("Any")) {
-            sendMessage("PROMPT: Choose resource to gain (Brick/Grain/Lumber/Wool/Ore/Gold):");
-            t = receiveMessage();
-        }
-        String regionName = resourceToRegion(t);
-        if (regionName == null || "Any".equals(regionName)) {
-            sendMessage("Unknown resource '" + t + "'. Ignored.");
-            return;
+            t = validateAndPromptResource("Choose resource to gain");
+        } else {
+            // Validate the provided resource type
+            String regionName = resourceToRegion(t);
+            if (regionName == null || "Any".equals(regionName)) {
+                // Invalid resource, prompt for correct input
+                sendMessage("Unknown resource '" + t + "'.");
+                t = validateAndPromptResource("Please enter a valid resource");
+            }
         }
 
+        String regionName = resourceToRegion(t);
         java.util.List<Card> regs = findRegions(regionName);
         if (regs.isEmpty()) {
             sendMessage("No region for resource " + t + " is present.");
@@ -492,6 +542,30 @@ public class Player {
         }
     }
 
+    /**
+     * Prompts the player for a valid resource until they provide a correct one.
+     * 
+     * @param promptMessage The message to display when asking for input
+     * @return A validated resource type name (Brick, Grain, Lumber, Wool, Ore, or
+     *         Gold)
+     */
+    public String validateAndPromptResource(String promptMessage) {
+        while (true) {
+            sendMessage("PROMPT: " + promptMessage + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
+            String input = receiveMessage();
+            if (input == null) {
+                input = "";
+            }
+            String regionName = resourceToRegion(input.trim());
+            if (regionName != null && !"Any".equals(regionName)) {
+                // Valid resource type
+                return input.trim();
+            }
+            sendMessage(
+                    "Invalid resource '" + input + "'. Please enter one of: Brick, Grain, Lumber, Wool, Ore, or Gold.");
+        }
+    }
+
     // Remove N resources of a type: repeatedly remove from the region with the
     // HIGHEST stock (>0)
     // Returns true if all could be removed, false otherwise (removes as many as
@@ -499,9 +573,13 @@ public class Player {
     public boolean removeResource(String type, int n) {
         if (n <= 0)
             return true;
+
+        // Validate resource type
         String regionName = resourceToRegion(type);
-        if (regionName == null || "Any".equals(regionName))
+        if (regionName == null || "Any".equals(regionName)) {
+            sendMessage("Invalid resource type '" + type + "' for removal.");
             return false;
+        }
 
         java.util.List<Card> regs = findRegions(regionName);
         if (regs.isEmpty())
@@ -525,6 +603,38 @@ public class Player {
             removed++;
         }
         return removed == n;
+    }
+
+    /**
+     * Prompts the player to discard a resource with validation and retry on invalid
+     * input.
+     * 
+     * @param promptMessage The message to display when asking for input
+     * @return The validated resource type that was discarded
+     */
+    public String promptAndRemoveResource(String promptMessage) {
+        while (true) {
+            sendMessage("PROMPT: " + promptMessage + " [Brick|Grain|Lumber|Wool|Ore|Gold]:");
+            String input = receiveMessage();
+            if (input == null) {
+                input = "";
+            }
+            String trimmedInput = input.trim();
+            String regionName = resourceToRegion(trimmedInput);
+
+            if (regionName == null || "Any".equals(regionName)) {
+                sendMessage("Invalid resource '" + input
+                        + "'. Please enter one of: Brick, Grain, Lumber, Wool, Ore, or Gold.");
+                continue;
+            }
+
+            // Try to remove the resource
+            if (removeResource(trimmedInput, 1)) {
+                return trimmedInput;
+            } else {
+                sendMessage("You don't have any " + trimmedInput + " to discard. Please choose another resource.");
+            }
+        }
     }
 
     // Set total stored resources for a type by redistributing across its regions.
@@ -614,5 +724,46 @@ public class Player {
     public String chooseResource() {
         sendMessage("PROMPT: Choose resource:");
         return receiveMessage();
+    }
+
+    // ------------- IPlayer interface implementations (getters) -------------
+    @Override
+    public List<List<Card>> getPrincipality() {
+        return principality;
+    }
+
+    @Override
+    public List<Card> getHand() {
+        return hand;
+    }
+
+    @Override
+    public boolean isBot() {
+        return isBot;
+    }
+
+    @Override
+    public int getVictoryPoints() {
+        return victoryPoints;
+    }
+
+    @Override
+    public int getCommercePoints() {
+        return commercePoints;
+    }
+
+    @Override
+    public int getStrengthPoints() {
+        return strengthPoints;
+    }
+
+    @Override
+    public int getSkillPoints() {
+        return skillPoints;
+    }
+
+    @Override
+    public int getProgressPoints() {
+        return progressPoints;
     }
 }
