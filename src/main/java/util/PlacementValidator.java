@@ -107,4 +107,20 @@ public class PlacementValidator {
         String placement = (card.placement == null ? "" : card.placement.toLowerCase());
         return placement.contains("expansion");
     }
+    
+    /**
+     * Normalize a row for adjacency checks.
+     * Cards on outer rows (0 and 4) behave as if they're on inner rows (1 and 3).
+     * 
+     * @param row The row to normalize
+     * @return The normalized row for adjacency purposes
+     */
+    public static int normalizeRowForAdjacency(int row) {
+        if (row == 0) {
+            return 1; // Outer top row behaves like inner top row
+        } else if (row == 4) {
+            return 3; // Outer bottom row behaves like inner bottom row
+        }
+        return row; // All other rows remain unchanged
+    }
 }

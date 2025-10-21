@@ -143,4 +143,21 @@ public class PlacementValidatorTest {
         assertTrue(PlacementValidator.isAboveOrBelowSettlementOrCity(player, 0, 2),
                 "Outer ring should be valid after inner ring is filled");
     }
+
+    @Test
+    public void testNormalizeRowForAdjacency() {
+        // Outer rows should normalize to inner rows
+        assertEquals(1, PlacementValidator.normalizeRowForAdjacency(0),
+                "Row 0 should normalize to row 1");
+        assertEquals(3, PlacementValidator.normalizeRowForAdjacency(4),
+                "Row 4 should normalize to row 3");
+
+        // Inner and center rows should remain unchanged
+        assertEquals(1, PlacementValidator.normalizeRowForAdjacency(1),
+                "Row 1 should remain row 1");
+        assertEquals(2, PlacementValidator.normalizeRowForAdjacency(2),
+                "Row 2 should remain row 2");
+        assertEquals(3, PlacementValidator.normalizeRowForAdjacency(3),
+                "Row 3 should remain row 3");
+    }
 }
