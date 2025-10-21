@@ -363,13 +363,13 @@ public class Player implements IPlayer {
         return t.toString();
     }
 
-    // Advantage tokens depend on being >= 1 ahead of the opponent.
+    // Advantage tokens depend on being >= 3 ahead of the opponent.
     public boolean hasTradeTokenAgainst(Player opp) {
-        return (this.commercePoints - (opp == null ? 0 : opp.commercePoints)) >= 1;
+        return (this.commercePoints - (opp == null ? 0 : opp.commercePoints)) >= 3;
     }
 
     public boolean hasStrengthTokenAgainst(Player opp) {
-        return (this.strengthPoints - (opp == null ? 0 : opp.strengthPoints)) >= 1;
+        return (this.strengthPoints - (opp == null ? 0 : opp.strengthPoints)) >= 3;
     }
 
     // Final score used for win check: base VP + 1 per advantage token against
