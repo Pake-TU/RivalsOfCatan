@@ -160,7 +160,8 @@ public class Card implements Comparable<Card> {
         System.out.println("ApplyEffect: " + nm + " at (" + row + "," + col + ")");
         
         // 0) Early validation for occupied slot
-        if (active.getCard(row, col) != null) {
+        // Exception: Cities can be placed on Settlements to replace them
+        if (active.getCard(row, col) != null && !nmEquals(nm, "City")) {
             active.sendMessage("That space is occupied.");
             return false;
         }

@@ -102,6 +102,9 @@ public class CenterCardEffectHandler {
             return false;
         }
         
+        // Return the settlement to the settlements pile
+        Card.settlements.add(under);
+        
         // No need to check adjacency - the settlement already satisfied those rules
         // when it was placed, and we're just upgrading it
         active.placeCard(row, col, card);
