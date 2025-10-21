@@ -278,4 +278,39 @@ public class AdvantageTokenTest {
         assertFalse(player1.hasTradeTokenAgainst(player2), "Player1 should lose advantage when tied");
         assertFalse(player2.hasTradeTokenAgainst(player1), "Player2 should not have advantage when tied");
     }
+
+    @Test
+    public void testOpponentLosesStrengthAdvantageWhenPlayerCatchesUpByPlacingCard() {
+        // Setup: Player 1 has 3 FP (has advantage), Player 2 has 2 FP
+        player1.strengthPoints = 3;
+        player2.strengthPoints = 2;
+        
+        // Setup player2 with a settlement so they can place expansion cards
+        Card settlement = new Card();
+        settlement.name = "Settlement";
+        settlement.type = "Settlement";
+        player2.placeCard(2, 2, settlement);
+        
+        assertTrue(player1.hasStrengthTokenAgainst(player2), "Player1 should have strength advantage initially");
+        assertFalse(player2.hasStrengthTokenAgainst(player1), "Player2 should not have advantage");
+        
+        // Player 2 places a card that gives +1 FP, bringing them to 3 FP (tied)
+        Card hero = new Card();
+        hero.name = "Test Hero";
+        hero.type = "Unit – Hero";
+        hero.placement = "Settlement/city";
+        hero.FP = "1";
+        hero.cost = "";
+        
+        // Apply the effect - this should cause Player 1 to lose advantage due to tie
+        hero.applyEffect(player2, player1, 1, 2);
+        
+        // Both players should now have 3 FP and be tied
+        assertEquals(3, player2.strengthPoints, "Player2 should have 3 FP now");
+        assertEquals(3, player1.strengthPoints, "Player1 should still have 3 FP");
+        
+        // CRITICAL: Both players should NOT have advantage when tied
+        assertFalse(player1.hasStrengthTokenAgainst(player2), "Player1 should lose advantage when tied");
+        assertFalse(player2.hasStrengthTokenAgainst(player1), "Player2 should not have advantage when tied");
+    }
 }
