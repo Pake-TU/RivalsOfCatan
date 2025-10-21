@@ -36,7 +36,7 @@ public class Server {
         players.add(new Player());
         // 2) bot player
         if (withBot) {
-            Player bot = new Player();
+            Player bot = new Player(new view.BotPlayerView());
             bot.isBot = true;
             players.add(bot);
         }
