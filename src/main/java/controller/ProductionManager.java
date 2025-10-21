@@ -63,9 +63,33 @@ public class ProductionManager implements IGameManager {
         Card region = p.getCard(rr, cc);
         if (region == null)
             return false;
+        
+        // Check for boosters in same row
         Card left = p.getCard(rr, cc - 1);
         Card right = p.getCard(rr, cc + 1);
-        return isBoosting(left, region) || isBoosting(right, region);
+        if (isBoosting(left, region) || isBoosting(right, region)) {
+            return true;
+        }
+        
+        // Also check the corresponding outer/inner row for boosters
+        // If we're on row 1, also check row 0 (outer top)
+        // If we're on row 3, also check row 4 (outer bottom)
+        int altRow = -1;
+        if (rr == 1) {
+            altRow = 0;
+        } else if (rr == 3) {
+            altRow = 4;
+        }
+        
+        if (altRow >= 0) {
+            Card altLeft = p.getCard(altRow, cc - 1);
+            Card altRight = p.getCard(altRow, cc + 1);
+            if (isBoosting(altLeft, region) || isBoosting(altRight, region)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     private boolean isBoosting(Card maybeBuilding, Card region) {
