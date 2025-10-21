@@ -243,4 +243,39 @@ public class AdvantageTokenTest {
         assertFalse(principality.contains("Strength+1"), "Should not show strength advantage");
         assertFalse(principality.contains("Total:"), "Should not show total when same as base");
     }
+
+    @Test
+    public void testOpponentLosesAdvantageWhenPlayerCatchesUpByPlacingCard() {
+        // Setup: Player 1 has 3 CP (has advantage), Player 2 has 2 CP
+        player1.commercePoints = 3;
+        player2.commercePoints = 2;
+        
+        // Setup player2 with a settlement so they can place expansion cards
+        Card settlement = new Card();
+        settlement.name = "Settlement";
+        settlement.type = "Settlement";
+        player2.placeCard(2, 2, settlement);
+        
+        assertTrue(player1.hasTradeTokenAgainst(player2), "Player1 should have trade advantage initially");
+        assertFalse(player2.hasTradeTokenAgainst(player1), "Player2 should not have advantage");
+        
+        // Player 2 places a card that gives +1 CP, bringing them to 3 CP (tied)
+        Card ship = new Card();
+        ship.name = "Test Trade Ship";
+        ship.type = "Unit – Trade Ship";
+        ship.placement = "Settlement/city";
+        ship.CP = "1";
+        ship.cost = "";
+        
+        // Apply the effect - this should cause Player 1 to lose advantage due to tie
+        ship.applyEffect(player2, player1, 1, 2);
+        
+        // Both players should now have 3 CP and be tied
+        assertEquals(3, player2.commercePoints, "Player2 should have 3 CP now");
+        assertEquals(3, player1.commercePoints, "Player1 should still have 3 CP");
+        
+        // CRITICAL: Both players should NOT have advantage when tied
+        assertFalse(player1.hasTradeTokenAgainst(player2), "Player1 should lose advantage when tied");
+        assertFalse(player2.hasTradeTokenAgainst(player1), "Player2 should not have advantage when tied");
+    }
 }
