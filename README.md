@@ -58,7 +58,8 @@ src/main/java/
 │   ├── IPlayerView.java                 // View interface for player I/O
 │   ├── ConsolePlayerView.java           // Console-based view implementation
 │   ├── BotPlayerView.java               // Bot player view (no I/O)
-│   └── NetworkPlayerView.java           // Network-based view implementation
+│   ├── NetworkPlayerView.java           // Network-based view implementation
+│   └── PlayerFormatter.java             // Display formatting utilities
 │
 ├── model/                               // Model layer - Game domain and entities
 │   ├── Card.java                        // Card data and effects
@@ -84,6 +85,18 @@ src/main/java/
 │   ├── ActionManager.java               // Manages action phase
 │   ├── EventResolver.java               // Resolves event die outcomes
 │   ├── events/                          // Event card implementations
+│   │   ├── IEventHandler.java           // Interface for event handlers
+│   │   ├── BrigandEvent.java
+│   │   ├── CelebrationEvent.java
+│   │   ├── EventCardDrawEvent.java
+│   │   ├── FeudEventCard.java
+│   │   ├── FraternalFeudsEventCard.java
+│   │   ├── InventionEventCard.java
+│   │   ├── PlentifulHarvestEvent.java
+│   │   ├── TradeEvent.java
+│   │   ├── TradeShipsRaceEventCard.java
+│   │   ├── TravelingMerchantEventCard.java
+│   │   └── YearOfPlentyEventCard.java
 │   └── interfaces/
 │       └── IGameManager.java            // Base interface for all managers
 │
@@ -94,7 +107,8 @@ src/main/java/
 │   ├── DiceRoller.java                  // Dice rolling logic
 │   ├── CostParser.java                  // Cost parsing utilities
 │   ├── CardLoader.java                  // Card loading from JSON
-│   └── PlacementValidator.java          // Card placement validation
+│   ├── PlacementValidator.java          // Card placement validation
+│   └── PlayerInputHelper.java           // Player input utilities
 │
 ├── Main.java                            // Application entry point
 └── Server.java                          // Server setup and player initialization
@@ -103,7 +117,25 @@ src/main/resources/
 └── cards.json                           // Card definitions
 
 src/test/java/
-└── (Test files)
+├── model/
+│   ├── effects/
+│   │   └── CenterCardEffectHandlerTest.java
+│   ├── cards/
+│   │   ├── ActionCardsTest.java
+│   │   ├── BuildingCardsTest.java
+│   │   ├── EventCardsTest.java
+│   │   ├── HeroCardsTest.java
+│   │   └── TradeShipCardsTest.java
+│   ├── AdvantageTokenTest.java
+│   └── CardStatsTest.java
+├── controller/
+│   ├── events/
+│   │   └── EventCardDrawEventTest.java
+│   ├── InitializationManagerTest.java
+│   └── ProductionManagerTest.java
+└── util/
+    ├── CostParserTest.java
+    └── PlacementValidatorTest.java
 ```
 
 ## Architecture
